@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rust Interactivo</title>
+<style>
+:root {
+  --bg-dark: #1a1025;
+  --bg-sidebar: #150d1f;
+  --bg-card: #231533;
+  --bg-editor: #1e1e2e;
+  --accent: #e8590c;
+  --accent-hover: #f76707;
+  --purple: #9b59b6;
+  --purple-light: #c39bd3;
+  --text: #e8e0f0;
+  --text-dim: #9a8fb0;
+  --text-bright: #fff;
+  --border: #3a2a4a;
+  --success: #2ecc71;
+  --error: #e74c3c;
+  --font-mono: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg-dark);
+  color: var(--text);
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Sidebar */
+#sidebar {
+  width: 300px;
+  min-width: 300px;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+  z-index: 100;
+}
+
+#sidebar-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+#sidebar-header h1 {
+  font-size: 1.4rem;
+  background: linear-gradient(135deg, var(--accent), var(--purple-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 4px;
+}
+
+#sidebar-header p { font-size: 0.75rem; color: var(--text-dim); }
+
+#chapter-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+#chapter-list::-webkit-scrollbar { width: 6px; }
+#chapter-list::-webkit-scrollbar-track { background: transparent; }
+#chapter-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.chapter-item {
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  border-left: 3px solid transparent;
+  transition: all 0.15s;
+}
+
+.chapter-item:hover {
+  background: rgba(155, 89, 182, 0.1);
+  color: var(--text);
+}
+
+.chapter-item.active {
+  background: rgba(232, 89, 12, 0.12);
+  color: var(--accent);
+  border-left-color: var(--accent);
+  font-weight: 600;
+}
+
+.chapter-item .ch-num {
+  font-size: 0.7rem;
+  color: var(--purple);
+  display: block;
+  margin-bottom: 2px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Main content */
+#main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+#topbar {
+  display: none;
+  padding: 12px 16px;
+  background: var(--bg-sidebar);
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+  gap: 12px;
+}
+
+#menu-btn {
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 1.4rem;
+  cursor: pointer;
+  padding: 4px;
+}
+
+#topbar h2 {
+  font-size: 1rem;
+  background: linear-gradient(135deg, var(--accent), var(--purple-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+#content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px 40px;
+}
+
+#content::-webkit-scrollbar { width: 8px; }
+#content::-webkit-scrollbar-track { background: transparent; }
+#content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+#lesson-title {
+  font-size: 1.8rem;
+  color: var(--text-bright);
+  margin-bottom: 8px;
+}
+
+#lesson-subtitle {
+  font-size: 0.9rem;
+  color: var(--purple-light);
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+#lesson-explanation {
+  line-height: 1.7;
+  color: var(--text);
+  margin-bottom: 28px;
+  max-width: 800px;
+}
+
+#lesson-explanation p { margin-bottom: 12px; }
+#lesson-explanation code {
+  background: var(--bg-card);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  color: var(--accent);
+}
+
+/* Editor area */
+#editor-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  max-width: 900px;
+  margin-bottom: 24px;
+}
+
+#editor-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  background: rgba(0,0,0,0.2);
+  border-bottom: 1px solid var(--border);
+}
+
+#editor-toolbar span {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+}
+
+#run-btn {
+  background: linear-gradient(135deg, var(--accent), #c2410c);
+  color: white;
+  border: none;
+  padding: 8px 24px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+#run-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(232,89,12,0.3); }
+#run-btn:active { transform: translateY(0); }
+#run-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+#editor-container { height: 350px; }
+
+#output-section {
+  border-top: 1px solid var(--border);
+  background: rgba(0,0,0,0.3);
+}
+
+#output-header {
+  padding: 8px 16px;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#output-status {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--text-dim);
+}
+
+#output-status.success { background: var(--success); }
+#output-status.error { background: var(--error); }
+#output-status.running { background: var(--accent); animation: pulse 1s infinite; }
+
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+#output {
+  padding: 12px 16px;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 200px;
+  overflow-y: auto;
+  color: var(--text);
+}
+
+/* Challenge box */
+#challenge-section {
+  background: linear-gradient(135deg, rgba(155,89,182,0.1), rgba(232,89,12,0.08));
+  border: 1px solid rgba(155,89,182,0.3);
+  border-radius: 10px;
+  padding: 20px 24px;
+  max-width: 900px;
+  margin-bottom: 40px;
+}
+
+#challenge-section h3 {
+  color: var(--purple-light);
+  font-size: 1rem;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#challenge-text {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+/* Overlay for mobile */
+#overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 50;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  #sidebar {
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    transform: translateX(-100%);
+  }
+  #sidebar.open { transform: translateX(0); }
+  #overlay.open { display: block; }
+  #topbar { display: flex; }
+  #content { padding: 20px 16px; }
+  #editor-container { height: 280px; }
+  #lesson-title { font-size: 1.4rem; }
+}
+
+/* Nav buttons */
+#nav-buttons {
+  display: flex;
+  gap: 12px;
+  max-width: 900px;
+  margin-bottom: 40px;
+}
+
+.nav-btn {
+  padding: 10px 20px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+.nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+</style>
+</head>
+<body>
+
+<div id="overlay" onclick="toggleSidebar()"></div>
+
+<nav id="sidebar">
+  <div id="sidebar-header">
+    <h1>🦀 Rust Interactivo</h1>
+    <p>Aprende Rust con código ejecutable</p>
+  </div>
+  <div id="chapter-list"></div>
+</nav>
+
+<div id="main">
+  <div id="topbar">
+    <button id="menu-btn" onclick="toggleSidebar()">☰</button>
+    <h2>🦀 Rust Interactivo</h2>
+  </div>
+
+  <div id="content">
+    <h1 id="lesson-title"></h1>
+    <div id="lesson-subtitle"></div>
+    <div id="lesson-explanation"></div>
+
+    <div id="editor-section">
+      <div id="editor-toolbar">
+        <span>main.rs</span>
+        <button id="run-btn" onclick="runCode()">▶ Ejecutar</button>
+      </div>
+      <div id="editor-container"></div>
+      <div id="output-section">
+        <div id="output-header">
+          <div id="output-status"></div>
+          <span>Salida</span>
+        </div>
+        <div id="output">Haz clic en "Ejecutar" para compilar y ejecutar tu código.</div>
+      </div>
+    </div>
+
+    <div id="challenge-section">
+      <h3>🏋️ Desafío</h3>
+      <div id="challenge-text"></div>
+    </div>
+
+    <div id="nav-buttons">
+      <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">← Anterior</button>
+      <button class="nav-btn" id="next-btn" onclick="navigate(1)">Siguiente →</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+<script>
+// ─── LESSONS DATA ───
+const lessons = [
+  {
+    chapter: "Capítulo 1",
+    title: "¡Hola, Mundo!",
+    subtitle: "Tu primer programa en Rust",
+    explanation: `<p>Rust es un lenguaje de programación enfocado en rendimiento, seguridad y concurrencia. Cada programa Rust comienza con una función <code>main()</code>, que es el punto de entrada. La macro <code>println!</code> imprime texto en la consola — el <code>!</code> indica que es una macro, no una función regular.</p>
+<p>A diferencia de lenguajes interpretados, Rust compila tu código a binarios nativos extremadamente rápidos. El compilador (<code>rustc</code>) es famoso por sus mensajes de error increíblemente útiles que te guían hacia la solución.</p>
+<p>En este playground usamos la API del Rust Playground oficial para compilar y ejecutar tu código en la nube. ¡Modifica el código y presiona Ejecutar!</p>`,
+    code: `fn main() {
+    println!("¡Hola, mundo!");
+    println!("Bienvenido a Rust Interactivo 🦀");
+
+    // Las variables se declaran con let
+    let nombre = "Rustacean";
+    println!("¡Hola, {}!", nombre);
+}`,
+    challenge: `Modifica el programa para que imprima tu nombre y tu lenguaje de programación favorito. Usa <code>println!</code> con interpolación de variables: <code>println!("{} y {}", var1, var2)</code>.`
+  },
+  {
+    chapter: "Capítulo 2",
+    title: "Juego de Adivinanzas",
+    subtitle: "Un proyecto guiado para aprender lo básico",
+    explanation: `<p>Este capítulo te enseña conceptos fundamentales de Rust a través de un mini-proyecto: un juego de adivinanzas. Aprenderás sobre <code>let</code>, <code>match</code>, métodos, crates externos, y cómo manejar entrada del usuario.</p>
+<p>En Rust, las variables son <strong>inmutables por defecto</strong>. Necesitas <code>let mut</code> para crear una variable mutable. El tipo <code>String::new()</code> crea un string vacío y mutable en el heap.</p>
+<p>El patrón <code>match</code> es una de las características más poderosas de Rust — te obliga a manejar todos los casos posibles, eliminando bugs comunes.</p>`,
+    code: `use std::cmp::Ordering;
+
+fn main() {
+    // Simulamos un juego de adivinanzas sin input interactivo
+    let secret_number = 42;
+    let guesses = vec![25, 50, 42];
+
+    println!("🎯 Adivina el número (entre 1 y 100)");
+    println!("El número secreto es: {}", secret_number);
+    println!();
+
+    for guess in guesses {
+        println!("Tu intento: {}", guess);
+
+        match guess.cmp(&secret_number) {
+            Ordering::Less => println!("📉 Muy pequeño!"),
+            Ordering::Greater => println!("📈 Muy grande!"),
+            Ordering::Equal => {
+                println!("🎉 ¡Correcto!");
+                break;
+            }
+        }
+        println!();
+    }
+}`,
+    challenge: `Cambia el número secreto y la lista de intentos. Agrega un contador que muestre en cuántos intentos se adivinó el número. Hint: usa una variable <code>let mut intentos = 0;</code>.`
+  },
+  {
+    chapter: "Capítulo 3",
+    title: "Conceptos Comunes",
+    subtitle: "Variables, tipos de datos y funciones",
+    explanation: `<p>Rust tiene un sistema de tipos estático y fuerte. Los tipos escalares incluyen enteros (<code>i32</code>, <code>u64</code>, etc.), punto flotante (<code>f64</code>), booleanos (<code>bool</code>) y caracteres (<code>char</code>). Los tipos compuestos son tuplas y arrays.</p>
+<p>Las funciones se declaran con <code>fn</code>. Rust es un lenguaje basado en expresiones — la última expresión de un bloque (sin punto y coma) es su valor de retorno. Esto permite un estilo funcional muy elegante.</p>
+<p>El control de flujo incluye <code>if/else</code>, <code>loop</code>, <code>while</code> y <code>for</code>. Nota que <code>if</code> es una expresión en Rust, así que puedes usarla al lado derecho de un <code>let</code>.</p>`,
+    code: `fn main() {
+    // Variables y mutabilidad
+    let x = 5;
+    let mut y = 10;
+    y += x;
+    println!("x = {}, y = {}", x, y);
+
+    // Tipos de datos
+    let entero: i32 = -42;
+    let flotante: f64 = 3.14;
+    let booleano: bool = true;
+    let caracter: char = '🦀';
+    let tupla: (i32, f64, char) = (500, 6.4, 'R');
+    let array: [i32; 5] = [1, 2, 3, 4, 5];
+
+    println!("Tupla: {:?}", tupla);
+    println!("Array: {:?}", array);
+    println!("Tercer elemento: {}", array[2]);
+
+    // Funciones
+    let resultado = sumar(3, 7);
+    println!("3 + 7 = {}", resultado);
+
+    // if como expresión
+    let condicion = if resultado > 5 { "grande" } else { "pequeño" };
+    println!("El resultado es {}", condicion);
+
+    // Loops
+    for i in 1..=5 {
+        print!("{} ", fibonacci(i));
+    }
+    println!("  ← primeros 5 Fibonacci");
+}
+
+fn sumar(a: i32, b: i32) -> i32 {
+    a + b  // sin ; = expresión de retorno
+}
+
+fn fibonacci(n: u32) -> u64 {
+    match n {
+        0 => 0,
+        1 => 1,
+        _ => fibonacci(n - 1) + fibonacci(n - 2),
+    }
+}`,
+    challenge: `Escribe una función <code>es_primo(n: u32) -> bool</code> que determine si un número es primo. Luego imprime todos los primos del 2 al 50 usando un <code>for</code> loop.`
+  },
+  {
+    chapter: "Capítulo 4",
+    title: "Ownership (Propiedad)",
+    subtitle: "El concepto más importante de Rust",
+    explanation: `<p><strong>Ownership</strong> es el concepto central de Rust y lo que lo hace único. Cada valor tiene exactamente un dueño, y cuando el dueño sale del scope, el valor se libera automáticamente. No hay garbage collector — la memoria se gestiona en tiempo de compilación.</p>
+<p>Cuando asignas un valor a otra variable, ocurre un <strong>move</strong> (para tipos en el heap como <code>String</code>). El dueño original ya no puede usar el valor. Para tipos en el stack (como <code>i32</code>), se hace una copia automática gracias al trait <code>Copy</code>.</p>
+<p>Las <strong>referencias</strong> (<code>&</code>) permiten "prestar" un valor sin transferir la propiedad. Puedes tener múltiples referencias inmutables O una sola referencia mutable, pero no ambas. Esto previene data races en tiempo de compilación.</p>`,
+    code: `fn main() {
+    // === OWNERSHIP Y MOVE ===
+    let s1 = String::from("hola");
+    let s2 = s1.clone();  // deep copy explícito
+    println!("s1 = {}, s2 = {}", s1, s2);
+
+    // Move: s3 toma propiedad, s1_moved ya no es válido
+    let s1_moved = String::from("mundo");
+    let s3 = s1_moved;
+    // println!("{}", s1_moved);  // ❌ ERROR: value moved
+    println!("s3 = {}", s3);
+
+    // Tipos Copy (stack) - se copian automáticamente
+    let x = 42;
+    let y = x;  // copia, ambos válidos
+    println!("x = {}, y = {}", x, y);
+
+    // === REFERENCIAS (BORROWING) ===
+    let texto = String::from("Rust es genial");
+    let longitud = calcular_longitud(&texto);  // prestamos
+    println!("'{}' tiene {} caracteres", texto, longitud);
+
+    // Referencia mutable
+    let mut mensaje = String::from("Hola");
+    agregar_mundo(&mut mensaje);
+    println!("{}", mensaje);
+}
+
+fn calcular_longitud(s: &String) -> usize {
+    s.len()  // solo leemos, no tomamos propiedad
+}
+
+fn agregar_mundo(s: &mut String) {
+    s.push_str(", mundo! 🌍");
+}`,
+    challenge: `Escribe una función <code>primera_palabra(s: &String) -> &str</code> que retorne un slice con la primera palabra del string (hasta el primer espacio). Pruébala con varias frases.`
+  },
+  {
+    chapter: "Capítulo 5",
+    title: "Structs",
+    subtitle: "Tipos de datos personalizados",
+    explanation: `<p>Los <strong>structs</strong> te permiten crear tipos de datos personalizados agrupando campos con nombre. Son similares a clases en otros lenguajes, pero sin herencia. Defines comportamiento con bloques <code>impl</code> que contienen métodos y funciones asociadas.</p>
+<p>Los métodos toman <code>&self</code> (referencia al struct) como primer parámetro. Las funciones asociadas (como <code>String::new()</code>) no toman <code>self</code> y se usan como constructores.</p>
+<p>Rust también tiene <strong>tuple structs</strong> (structs sin nombres de campo) y <strong>unit structs</strong> (sin campos). El atributo <code>#[derive(Debug)]</code> permite imprimir structs con <code>{:?}</code>.</p>`,
+    code: `#[derive(Debug)]
+struct Rectangulo {
+    ancho: f64,
+    alto: f64,
+}
+
+impl Rectangulo {
+    // Función asociada (constructor)
+    fn nuevo(ancho: f64, alto: f64) -> Self {
+        Self { ancho, alto }
+    }
+
+    fn cuadrado(lado: f64) -> Self {
+        Self { ancho: lado, alto: lado }
+    }
+
+    // Métodos
+    fn area(&self) -> f64 {
+        self.ancho * self.alto
+    }
+
+    fn perimetro(&self) -> f64 {
+        2.0 * (self.ancho + self.alto)
+    }
+
+    fn puede_contener(&self, otro: &Rectangulo) -> bool {
+        self.ancho > otro.ancho && self.alto > otro.alto
+    }
+
+    fn escalar(&mut self, factor: f64) {
+        self.ancho *= factor;
+        self.alto *= factor;
+    }
+}
+
+fn main() {
+    let mut rect = Rectangulo::nuevo(30.0, 50.0);
+    let cuad = Rectangulo::cuadrado(10.0);
+
+    println!("Rectángulo: {:?}", rect);
+    println!("Área: {:.1}", rect.area());
+    println!("Perímetro: {:.1}", rect.perimetro());
+    println!("¿Contiene al cuadrado? {}", rect.puede_contener(&cuad));
+
+    rect.escalar(2.0);
+    println!("\\nDespués de escalar x2: {:?}", rect);
+    println!("Nueva área: {:.1}", rect.area());
+}`,
+    challenge: `Crea un struct <code>Circulo</code> con campo <code>radio</code>. Implementa métodos para <code>area()</code>, <code>circunferencia()</code>, y una función asociada <code>desde_diametro(d: f64)</code>. Usa <code>std::f64::consts::PI</code>.`
+  },
+  {
+    chapter: "Capítulo 6",
+    title: "Enums y Pattern Matching",
+    subtitle: "Tipos algebraicos y match",
+    explanation: `<p>Los <strong>enums</strong> en Rust son mucho más poderosos que en otros lenguajes. Cada variante puede contener datos de diferentes tipos, haciéndolos equivalentes a "tagged unions" o "tipos algebraicos de datos".</p>
+<p>El tipo <code>Option&lt;T&gt;</code> es un enum fundamental: <code>Some(T)</code> o <code>None</code>. Rust no tiene <code>null</code> — usa <code>Option</code> para representar la ausencia de valor, forzándote a manejar ambos casos.</p>
+<p>La expresión <code>match</code> te obliga a cubrir todas las variantes posibles (es exhaustiva). Para manejar un solo caso, puedes usar <code>if let</code> como atajo conveniente.</p>`,
+    code: `#[derive(Debug)]
+enum Moneda {
+    Centavo,
+    Cinco,
+    Diez,
+    Veinticinco(EstadoUS),
+}
+
+#[derive(Debug)]
+enum EstadoUS {
+    Alabama,
+    Alaska,
+    California,
+}
+
+fn valor_en_centavos(moneda: &Moneda) -> u32 {
+    match moneda {
+        Moneda::Centavo => 1,
+        Moneda::Cinco => 5,
+        Moneda::Diez => 10,
+        Moneda::Veinticinco(estado) => {
+            println!("  Moneda de 25¢ del estado: {:?}", estado);
+            25
+        }
+    }
+}
+
+fn dividir(a: f64, b: f64) -> Option<f64> {
+    if b == 0.0 { None } else { Some(a / b) }
+}
+
+fn main() {
+    // Enum con datos
+    let monedas = vec![
+        Moneda::Centavo,
+        Moneda::Veinticinco(EstadoUS::California),
+        Moneda::Diez,
+        Moneda::Cinco,
+    ];
+
+    let total: u32 = monedas.iter().map(|m| valor_en_centavos(m)).sum();
+    println!("Total: {}¢\\n", total);
+
+    // Option<T> - no null en Rust!
+    let resultado = dividir(10.0, 3.0);
+    match resultado {
+        Some(val) => println!("10 / 3 = {:.4}", val),
+        None => println!("No se puede dividir por cero!"),
+    }
+
+    let imposible = dividir(5.0, 0.0);
+    if let Some(val) = imposible {
+        println!("Resultado: {}", val);
+    } else {
+        println!("División por cero detectada ⚠️");
+    }
+
+    // unwrap_or para valores por defecto
+    let seguro = dividir(1.0, 0.0).unwrap_or(0.0);
+    println!("Valor seguro: {}", seguro);
+}`,
+    challenge: `Crea un enum <code>Forma</code> con variantes <code>Circulo(f64)</code>, <code>Rectangulo(f64, f64)</code>, y <code>Triangulo(f64, f64)</code>. Implementa una función <code>area(forma: &Forma) -> f64</code> usando <code>match</code>.`
+  },
+  {
+    chapter: "Capítulo 7",
+    title: "Módulos y Paquetes",
+    subtitle: "Organización del código",
+    explanation: `<p>Rust organiza código con un sistema de <strong>módulos</strong>. Los módulos controlan la privacidad (público vs privado), el scope de nombres, y la estructura del proyecto. Por defecto, todo es privado — usa <code>pub</code> para hacer público.</p>
+<p>La palabra clave <code>mod</code> define un módulo, y <code>use</code> trae items al scope actual. Puedes usar rutas absolutas (<code>crate::modulo::item</code>) o relativas. El operador <code>super</code> se refiere al módulo padre.</p>
+<p>En este ejemplo simulamos la estructura de módulos en un solo archivo. En proyectos reales, cada módulo sería un archivo o directorio separado.</p>`,
+    code: `// Simulando sistema de módulos
+mod restaurante {
+    pub mod recepcion {
+        pub fn sentar_en_mesa(mesa: u32) {
+            println!("🪑 Cliente sentado en mesa {}", mesa);
+            super::super::registrar_evento("Cliente sentado");
+        }
+    }
+
+    pub mod cocina {
+        pub struct Orden {
+            pub platillo: String,
+            cantidad: u32,  // privado!
+        }
+
+        impl Orden {
+            pub fn nueva(platillo: &str, cantidad: u32) -> Self {
+                Self {
+                    platillo: platillo.to_string(),
+                    cantidad,
+                }
+            }
+
+            pub fn preparar(&self) {
+                println!("👨‍🍳 Preparando {} x{}", self.platillo, self.cantidad);
+            }
+
+            pub fn descripcion(&self) -> String {
+                format!("{} (x{})", self.platillo, self.cantidad)
+            }
+        }
+
+        pub fn menu() -> Vec<&'static str> {
+            vec!["Tacos 🌮", "Enchiladas 🫔", "Pozole 🍲", "Churros 🍩"]
+        }
+    }
+}
+
+fn registrar_evento(evento: &str) {
+    println!("📋 Log: {}", evento);
+}
+
+// Usando 'use' para acortar rutas
+use restaurante::cocina::Orden;
+use restaurante::cocina::menu;
+use restaurante::recepcion::sentar_en_mesa;
+
+fn main() {
+    println!("=== Restaurante Rust 🦀 ===\\n");
+
+    // Menú
+    println!("📜 Menú del día:");
+    for (i, platillo) in menu().iter().enumerate() {
+        println!("  {}. {}", i + 1, platillo);
+    }
+    println!();
+
+    // Servicio
+    sentar_en_mesa(7);
+
+    let orden1 = Orden::nueva("Tacos 🌮", 3);
+    let orden2 = Orden::nueva("Churros 🍩", 2);
+
+    orden1.preparar();
+    orden2.preparar();
+
+    println!("\\n📝 Resumen: {} y {}", orden1.descripcion(), orden2.descripcion());
+}`,
+    challenge: `Agrega un módulo <code>caja</code> dentro de <code>restaurante</code> con una función pública <code>cobrar(ordenes: &[Orden])</code> que calcule e imprima el total. Asigna precios a los platillos usando match.`
+  },
+  {
+    chapter: "Capítulo 8",
+    title: "Colecciones Comunes",
+    subtitle: "Vec, String y HashMap",
+    explanation: `<p>Rust tiene tres colecciones fundamentales en su librería estándar: <code>Vec&lt;T&gt;</code> (vector/lista dinámica), <code>String</code> (texto UTF-8 dinámico), y <code>HashMap&lt;K, V&gt;</code> (diccionario/mapa hash).</p>
+<p>Los vectores son como arrays dinámicos. Se crean con <code>Vec::new()</code> o la macro <code>vec![]</code>. Puedes acceder elementos con indexación <code>[i]</code> (panic si fuera de rango) o <code>.get(i)</code> (retorna <code>Option</code>).</p>
+<p><code>HashMap</code> almacena pares clave-valor. Es útil para contar frecuencias, cachear datos, o cualquier mapeo. La entrada <code>entry().or_insert()</code> es un patrón muy elegante.</p>`,
+    code: `use std::collections::HashMap;
+
+fn main() {
+    // === VECTORES ===
+    let mut numeros: Vec<i32> = vec![1, 5, 3, 8, 2, 9, 4, 7, 6];
+    println!("Original: {:?}", numeros);
+
+    numeros.sort();
+    println!("Ordenado: {:?}", numeros);
+
+    numeros.retain(|&x| x % 2 == 0);
+    println!("Solo pares: {:?}", numeros);
+
+    let suma: i32 = numeros.iter().sum();
+    println!("Suma de pares: {}\\n", suma);
+
+    // === STRINGS ===
+    let mut saludo = String::from("Hola");
+    saludo.push_str(", mundo");
+    saludo.push('!');
+    println!("{}", saludo);
+    println!("Longitud: {} bytes, {} chars\\n", saludo.len(), saludo.chars().count());
+
+    // === HASHMAP ===
+    let texto = "el gato el perro el gato la casa el gato la casa";
+    let mut frecuencias: HashMap<&str, u32> = HashMap::new();
+
+    for palabra in texto.split_whitespace() {
+        let contador = frecuencias.entry(palabra).or_insert(0);
+        *contador += 1;
+    }
+
+    println!("Frecuencia de palabras:");
+    let mut freq_vec: Vec<_> = frecuencias.iter().collect();
+    freq_vec.sort_by(|a, b| b.1.cmp(a.1));
+
+    for (palabra, conteo) in freq_vec {
+        let barra = "█".repeat(*conteo as usize);
+        println!("  {:>8} │{} ({})", palabra, barra, conteo);
+    }
+}`,
+    challenge: `Usando un <code>HashMap</code>, escribe un programa que reciba un vector de números y calcule: la media, la mediana, y la moda (número más frecuente). Imprime los tres resultados.`
+  },
+  {
+    chapter: "Capítulo 9",
+    title: "Manejo de Errores",
+    subtitle: "Result, panic! y el operador ?",
+    explanation: `<p>Rust tiene dos mecanismos de error: <code>panic!</code> para errores irrecuperables (el programa se detiene) y <code>Result&lt;T, E&gt;</code> para errores recuperables. La mayoría del tiempo usarás <code>Result</code>.</p>
+<p><code>Result</code> es un enum: <code>Ok(T)</code> contiene el valor exitoso y <code>Err(E)</code> el error. El operador <code>?</code> es azúcar sintáctico que propaga errores automáticamente — si el Result es Err, retorna el error; si es Ok, extrae el valor.</p>
+<p>En Rust idiomático, defines tus propios tipos de error y usas <code>?</code> extensivamente. Esto hace el manejo de errores explícito pero ergonómico — no hay excepciones ocultas.</p>`,
+    code: `use std::num::ParseIntError;
+use std::fmt;
+
+// Error personalizado
+#[derive(Debug)]
+enum AppError {
+    ParseError(ParseIntError),
+    ValidacionError(String),
+    DivisionPorCero,
+}
+
+impl fmt::Display for AppError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            AppError::ParseError(e) => write!(f, "Error de parseo: {}", e),
+            AppError::ValidacionError(msg) => write!(f, "Validación: {}", msg),
+            AppError::DivisionPorCero => write!(f, "División por cero"),
+        }
+    }
+}
+
+impl From<ParseIntError> for AppError {
+    fn from(e: ParseIntError) -> Self {
+        AppError::ParseError(e)
+    }
+}
+
+fn parsear_y_dividir(a: &str, b: &str) -> Result<f64, AppError> {
+    let num_a: i32 = a.parse()?;  // ? convierte ParseIntError -> AppError
+    let num_b: i32 = b.parse()?;
+
+    if num_b == 0 {
+        return Err(AppError::DivisionPorCero);
+    }
+
+    if num_a < 0 || num_b < 0 {
+        return Err(AppError::ValidacionError(
+            "Los números deben ser positivos".to_string()
+        ));
+    }
+
+    Ok(num_a as f64 / num_b as f64)
+}
+
+fn main() {
+    let casos = vec![
+        ("10", "3"),
+        ("abc", "5"),
+        ("10", "0"),
+        ("-5", "2"),
+        ("100", "7"),
+    ];
+
+    for (a, b) in casos {
+        print!("{:>4} / {:<4} → ", a, b);
+        match parsear_y_dividir(a, b) {
+            Ok(resultado) => println!("✅ {:.4}", resultado),
+            Err(e) => println!("❌ {}", e),
+        }
+    }
+
+    // unwrap_or_else para manejar errores con closures
+    let valor = parsear_y_dividir("42", "0")
+        .unwrap_or_else(|e| {
+            println!("\\n⚠️  Usando valor por defecto porque: {}", e);
+            0.0
+        });
+    println!("Valor final: {}", valor);
+}`,
+    challenge: `Escribe una función <code>validar_email(email: &str) -> Result&lt;(), String&gt;</code> que verifique que el email contiene <code>@</code>, tiene texto antes y después del <code>@</code>, y el dominio contiene un punto. Pruébala con varios emails.`
+  },
+  {
+    chapter: "Capítulo 10",
+    title: "Genéricos, Traits y Lifetimes",
+    subtitle: "Abstracción sin costo",
+    explanation: `<p>Los <strong>genéricos</strong> te permiten escribir código que funciona con múltiples tipos. Rust usa "monomorphization" — genera código específico para cada tipo en compilación, así que no hay costo en runtime.</p>
+<p>Los <strong>traits</strong> definen comportamiento compartido (similares a interfaces). Puedes usarlos como restricciones con <code>T: Display + Clone</code> o como "trait objects" dinámicos con <code>dyn Trait</code>. Son la base del polimorfismo en Rust.</p>
+<p>Los <strong>lifetimes</strong> (<code>'a</code>) son anotaciones que le dicen al compilador cuánto tiempo viven las referencias. El compilador los infiere la mayoría del tiempo, pero a veces necesitas ser explícito — especialmente cuando una función retorna una referencia.</p>`,
+    code: `use std::fmt;
+
+// === GENÉRICOS ===
+fn mayor<T: PartialOrd>(lista: &[T]) -> &T {
+    let mut max = &lista[0];
+    for item in &lista[1..] {
+        if item > max {
+            max = item;
+        }
+    }
+    max
+}
+
+// === TRAITS ===
+trait Resumen {
+    fn resumir(&self) -> String;
+
+    // Método con implementación por defecto
+    fn preview(&self) -> String {
+        let r = self.resumir();
+        if r.len() > 30 {
+            format!("{}...", &r[..30])
+        } else {
+            r
+        }
+    }
+}
+
+#[derive(Debug)]
+struct Articulo {
+    titulo: String,
+    autor: String,
+    contenido: String,
+}
+
+#[derive(Debug)]
+struct Tweet {
+    usuario: String,
+    texto: String,
+    likes: u32,
+}
+
+impl Resumen for Articulo {
+    fn resumir(&self) -> String {
+        format!("📰 {} por {} — {}", self.titulo, self.autor, &self.contenido)
+    }
+}
+
+impl Resumen for Tweet {
+    fn resumir(&self) -> String {
+        format!("🐦 @{}: {} (❤️ {})", self.usuario, self.texto, self.likes)
+    }
+}
+
+// Trait como parámetro
+fn notificar(item: &impl Resumen) {
+    println!("  → {}", item.preview());
+}
+
+// === LIFETIMES ===
+fn mas_largo<'a>(x: &'a str, y: &'a str) -> &'a str {
+    if x.len() > y.len() { x } else { y }
+}
+
+fn main() {
+    // Genéricos
+    let numeros = vec![34, 50, 25, 100, 65];
+    let palabras = vec!["hola", "mundo", "rust", "zzz"];
+    println!("Mayor número: {}", mayor(&numeros));
+    println!("Mayor palabra: {}\\n", mayor(&palabras));
+
+    // Traits
+    let articulo = Articulo {
+        titulo: "Rust 2024 Edition".to_string(),
+        autor: "Ferris".to_string(),
+        contenido: "Las novedades de la nueva edición de Rust son increíbles y revolucionarias".to_string(),
+    };
+    let tweet = Tweet {
+        usuario: "rustlang".to_string(),
+        texto: "Rust es el lenguaje más amado por 8vo año!".to_string(),
+        likes: 42000,
+    };
+
+    println!("Notificaciones:");
+    notificar(&articulo);
+    notificar(&tweet);
+
+    // Lifetimes
+    let resultado;
+    let s1 = String::from("cadena larga");
+    {
+        let s2 = String::from("corta");
+        resultado = mas_largo(s1.as_str(), s2.as_str());
+        println!("\\nMás largo: '{}'", resultado);
+    }
+}`,
+    challenge: `Crea un trait <code>Area</code> con un método <code>area(&self) -> f64</code>. Implementalo para structs <code>Circulo</code> y <code>Rectangulo</code>. Luego escribe una función genérica <code>imprimir_area(forma: &impl Area)</code>.`
+  },
+  {
+    chapter: "Capítulo 11",
+    title: "Testing",
+    subtitle: "Pruebas automáticas en Rust",
+    explanation: `<p>Rust tiene soporte de testing integrado. Las funciones de test se anotan con <code>#[test]</code> y usan macros como <code>assert!</code>, <code>assert_eq!</code>, y <code>assert_ne!</code> para verificar resultados.</p>
+<p>Puedes probar que tu código maneje errores correctamente con <code>#[should_panic]</code>. Los tests también pueden retornar <code>Result</code> para usar el operador <code>?</code>.</p>
+<p>Nota: En el Playground no podemos correr <code>cargo test</code>, pero podemos simular el patrón de testing ejecutando asserts en main. En proyectos reales, los tests van en un módulo <code>#[cfg(test)]</code>.</p>`,
+    code: `// Funciones a testear
+fn sumar(a: i32, b: i32) -> i32 { a + b }
+
+fn es_palindromo(s: &str) -> bool {
+    let limpio: String = s.chars()
+        .filter(|c| c.is_alphanumeric())
+        .map(|c| c.to_lowercase().next().unwrap())
+        .collect();
+    limpio == limpio.chars().rev().collect::<String>()
+}
+
+fn factorial(n: u64) -> u64 {
+    match n {
+        0 | 1 => 1,
+        _ => n * factorial(n - 1),
+    }
+}
+
+// Simulando tests (en proyecto real: #[test])
+fn main() {
+    let mut passed = 0;
+    let mut failed = 0;
+
+    macro_rules! test {
+        ($name:expr, $body:expr) => {
+            if $body {
+                println!("  ✅ {}", $name);
+                passed += 1;
+            } else {
+                println!("  ❌ {}", $name);
+                failed += 1;
+            }
+        }
+    }
+
+    println!("🧪 Ejecutando tests...\\n");
+
+    // Tests de sumar
+    test!("sumar: positivos", sumar(2, 3) == 5);
+    test!("sumar: negativos", sumar(-2, -3) == -5);
+    test!("sumar: cero", sumar(0, 0) == 0);
+    test!("sumar: mixto", sumar(-1, 1) == 0);
+
+    // Tests de palindromo
+    test!("palindromo: 'ana'", es_palindromo("ana"));
+    test!("palindromo: 'Anita lava la tina'", es_palindromo("Anita lava la tina"));
+    test!("palindromo: 'hello' no es", !es_palindromo("hello"));
+    test!("palindromo: vacío", es_palindromo(""));
+
+    // Tests de factorial
+    test!("factorial: 0! = 1", factorial(0) == 1);
+    test!("factorial: 5! = 120", factorial(5) == 120);
+    test!("factorial: 10! = 3628800", factorial(10) == 3628800);
+
+    println!("\\n━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    println!("Resultados: {} passed, {} failed", passed, failed);
+    if failed == 0 {
+        println!("🎉 ¡Todos los tests pasaron!");
+    } else {
+        println!("⚠️  Hay tests fallidos");
+    }
+}`,
+    challenge: `Escribe una función <code>fizzbuzz(n: u32) -> String</code> que retorne "Fizz" para múltiplos de 3, "Buzz" para múltiplos de 5, "FizzBuzz" para ambos, y el número como string en otro caso. Agrega al menos 6 tests.`
+  },
+  {
+    chapter: "Capítulo 12",
+    title: "Proyecto: CLI minigrep",
+    subtitle: "Construyendo una herramienta de búsqueda",
+    explanation: `<p>En este capítulo construimos una versión simplificada de <code>grep</code> — una herramienta que busca texto en contenido. Es un excelente ejercicio que combina todo lo aprendido: structs, enums, error handling, iteradores y más.</p>
+<p>La función <code>search</code> usa iteradores y closures para filtrar líneas que contengan la query. La versión case-insensitive convierte todo a minúsculas antes de comparar.</p>
+<p>En el Playground no tenemos acceso al filesystem, así que trabajamos con strings en memoria. En un proyecto real, leerías archivos con <code>std::fs::read_to_string</code>.</p>`,
+    code: `use std::fmt;
+
+#[derive(Debug)]
+struct Config {
+    query: String,
+    case_sensitive: bool,
+}
+
+impl Config {
+    fn new(query: &str, case_sensitive: bool) -> Self {
+        Self {
+            query: query.to_string(),
+            case_sensitive,
+        }
+    }
+}
+
+fn search<'a>(query: &str, contenido: &'a str, case_sensitive: bool) -> Vec<(usize, &'a str)> {
+    if case_sensitive {
+        contenido.lines()
+            .enumerate()
+            .filter(|(_, linea)| linea.contains(query))
+            .map(|(i, linea)| (i + 1, linea))
+            .collect()
+    } else {
+        let query_lower = query.to_lowercase();
+        contenido.lines()
+            .enumerate()
+            .filter(|(_, linea)| linea.to_lowercase().contains(&query_lower))
+            .map(|(i, linea)| (i + 1, linea))
+            .collect()
+    }
+}
+
+fn main() {
+    let poema = "\
+Rust es un lenguaje seguro y rápido,
+diseñado para sistemas de alto rendimiento.
+La seguridad de memoria sin garbage collector
+hace que RUST sea único en su categoría.
+Con ownership y borrowing,
+rust previene data races en compilación.
+¡Ferris el cangrejo es su mascota! 🦀
+El ecosistema crece cada día más.";
+
+    println!("📄 Contenido:");
+    println!("─────────────────────────────────");
+    for (i, linea) in poema.lines().enumerate() {
+        println!("{:>2} │ {}", i + 1, linea);
+    }
+
+    // Búsqueda case-sensitive
+    let config = Config::new("rust", false);
+    println!("\\n🔍 Buscando '{}' (case-insensitive):", config.query);
+    let resultados = search(&config.query, poema, config.case_sensitive);
+    for (num, linea) in &resultados {
+        println!("  L{}: {}", num, linea);
+    }
+    println!("  → {} coincidencias\\n", resultados.len());
+
+    // Búsqueda case-sensitive
+    let config2 = Config::new("rust", true);
+    println!("🔍 Buscando '{}' (case-sensitive):", config2.query);
+    let resultados2 = search(&config2.query, poema, config2.case_sensitive);
+    for (num, linea) in &resultados2 {
+        println!("  L{}: {}", num, linea);
+    }
+    println!("  → {} coincidencias", resultados2.len());
+}`,
+    challenge: `Agrega una función <code>search_regex_simple</code> que busque líneas que empiecen con un patrón dado. También agrega una función que cuente las ocurrencias totales de la query (no solo líneas, sino cada aparición).`
+  },
+  {
+    chapter: "Capítulo 13",
+    title: "Closures e Iteradores",
+    subtitle: "Programación funcional en Rust",
+    explanation: `<p>Los <strong>closures</strong> son funciones anónimas que capturan variables del entorno. Se definen con <code>|params| expresión</code> y Rust infiere los tipos automáticamente. Capturan por referencia, mutably, o por valor según cómo se usen.</p>
+<p>Los <strong>iteradores</strong> son lazy — no hacen nada hasta que los consumes. Los "adaptadores" como <code>map</code>, <code>filter</code>, <code>flat_map</code> transforman iteradores sin ejecutarlos. Los "consumidores" como <code>collect</code>, <code>sum</code>, <code>for_each</code> ejecutan la cadena.</p>
+<p>La combinación de closures + iteradores produce código expresivo y eficiente. El compilador optimiza estas cadenas a loops equivalentes ("zero-cost abstractions").</p>`,
+    code: `fn main() {
+    // === CLOSURES ===
+    let multiplicar = |x: i32, y: i32| x * y;
+    println!("3 × 7 = {}", multiplicar(3, 7));
+
+    // Closure que captura del entorno
+    let offset = 10;
+    let sumar_offset = |x| x + offset;
+    println!("5 + offset({}) = {}\\n", offset, sumar_offset(5));
+
+    // === ITERADORES ===
+    let numeros = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+    // Encadenamiento funcional
+    let resultado: Vec<i32> = numeros.iter()
+        .filter(|&&x| x % 2 == 0)       // pares
+        .map(|&x| x * x)                 // al cuadrado
+        .collect();
+    println!("Pares al cuadrado: {:?}", resultado);
+
+    // Suma con fold
+    let factorial = (1..=10).fold(1u64, |acc, x| acc * x);
+    println!("10! = {}", factorial);
+
+    // Zip y enumerate
+    let nombres = vec!["Alice", "Bob", "Charlie"];
+    let puntajes = vec![95, 87, 92];
+
+    println!("\\n🏆 Ranking:");
+    nombres.iter()
+        .zip(puntajes.iter())
+        .enumerate()
+        .for_each(|(i, (nombre, puntaje))| {
+            let medalla = match i {
+                0 => "🥇",
+                1 => "🥈",
+                2 => "🥉",
+                _ => "  ",
+            };
+            println!("  {} {} — {} pts", medalla, nombre, puntaje);
+        });
+
+    // Flat map
+    let frases = vec!["hola mundo", "rust es genial", "me gusta programar"];
+    let palabras: Vec<&str> = frases.iter()
+        .flat_map(|f| f.split_whitespace())
+        .collect();
+    println!("\\nPalabras: {:?}", palabras);
+
+    // any, all, find
+    let tiene_largo = numeros.iter().any(|&x| x > 8);
+    let todos_positivos = numeros.iter().all(|&x| x > 0);
+    let primer_mayor_5 = numeros.iter().find(|&&x| x > 5);
+
+    println!("\\n¿Alguno > 8? {}", tiene_largo);
+    println!("¿Todos positivos? {}", todos_positivos);
+    println!("Primer > 5: {:?}", primer_mayor_5);
+
+    // Crear iterador personalizado con successors
+    let fibs: Vec<u64> = std::iter::successors(
+        Some((0u64, 1u64)),
+        |&(a, b)| Some((b, a + b))
+    )
+    .map(|(a, _)| a)
+    .take(15)
+    .collect();
+    println!("\\nFibonacci: {:?}", fibs);
+}`,
+    challenge: `Dado un vector de strings, usa iteradores para: 1) filtrar los que tengan más de 4 caracteres, 2) convertirlos a mayúsculas, 3) ordenarlos alfabéticamente, 4) unirlos con ", ". Todo en una sola cadena de iteradores.`
+  },
+  {
+    chapter: "Capítulo 15",
+    title: "Smart Pointers",
+    subtitle: "Box, Rc, RefCell",
+    explanation: `<p>Los <strong>smart pointers</strong> son structs que se comportan como punteros pero con funcionalidad adicional. <code>Box&lt;T&gt;</code> almacena datos en el heap con un solo dueño. Es útil para tipos recursivos y datos grandes.</p>
+<p><code>Rc&lt;T&gt;</code> (Reference Counted) permite múltiples dueños del mismo dato. Cada <code>clone()</code> incrementa un contador; cuando llega a 0, el dato se libera. Solo para uso single-threaded.</p>
+<p><code>RefCell&lt;T&gt;</code> permite mutabilidad interior — puedes mutar datos incluso detrás de una referencia inmutable. Las reglas de borrowing se verifican en runtime en vez de compilación.</p>`,
+    code: `use std::rc::Rc;
+use std::cell::RefCell;
+
+// Box: tipo recursivo (lista enlazada)
+#[derive(Debug)]
+enum Lista {
+    Cons(i32, Box<Lista>),
+    Nil,
+}
+
+impl Lista {
+    fn new() -> Self { Lista::Nil }
+
+    fn push(self, valor: i32) -> Self {
+        Lista::Cons(valor, Box::new(self))
+    }
+
+    fn to_vec(&self) -> Vec<i32> {
+        let mut resultado = Vec::new();
+        let mut actual = self;
+        while let Lista::Cons(val, siguiente) = actual {
+            resultado.push(*val);
+            actual = siguiente;
+        }
+        resultado
+    }
+}
+
+// Rc + RefCell: múltiples dueños con mutabilidad
+#[derive(Debug)]
+struct Nodo {
+    valor: i32,
+    hijos: RefCell<Vec<Rc<Nodo>>>,
+}
+
+impl Nodo {
+    fn new(valor: i32) -> Rc<Self> {
+        Rc::new(Self {
+            valor,
+            hijos: RefCell::new(Vec::new()),
+        })
+    }
+
+    fn agregar_hijo(padre: &Rc<Nodo>, hijo: Rc<Nodo>) {
+        padre.hijos.borrow_mut().push(hijo);
+    }
+
+    fn imprimir(&self, nivel: usize) {
+        let indent = "  ".repeat(nivel);
+        println!("{}├─ {}", indent, self.valor);
+        for hijo in self.hijos.borrow().iter() {
+            hijo.imprimir(nivel + 1);
+        }
+    }
+}
+
+fn main() {
+    // Box: Lista enlazada
+    println!("📦 Box - Lista enlazada:");
+    let lista = Lista::new()
+        .push(3)
+        .push(2)
+        .push(1);
+    println!("  {:?}", lista.to_vec());
+
+    // Rc: compartir propiedad
+    println!("\\n🔗 Rc - Propiedad compartida:");
+    let dato = Rc::new(String::from("compartido"));
+    let ref1 = Rc::clone(&dato);
+    let ref2 = Rc::clone(&dato);
+    println!("  Valor: {}", dato);
+    println!("  Referencias: {}", Rc::strong_count(&dato));
+    drop(ref1);
+    println!("  Después de drop: {}", Rc::strong_count(&dato));
+    drop(ref2);
+    println!("  Después de drop: {}", Rc::strong_count(&dato));
+
+    // RefCell + Rc: árbol mutable compartido
+    println!("\\n🌳 Rc<RefCell> - Árbol:");
+    let raiz = Nodo::new(1);
+    let hijo_a = Nodo::new(2);
+    let hijo_b = Nodo::new(3);
+    let nieto = Nodo::new(4);
+
+    Nodo::agregar_hijo(&hijo_a, Rc::clone(&nieto));
+    Nodo::agregar_hijo(&raiz, hijo_a);
+    Nodo::agregar_hijo(&raiz, hijo_b);
+
+    raiz.imprimir(0);
+}`,
+    challenge: `Implementa una lista doblemente enlazada simple usando <code>Rc&lt;RefCell&lt;Nodo&gt;&gt;</code>. Cada nodo debe tener un valor y un <code>Option</code> al siguiente nodo. Implementa <code>push</code> y un método para imprimir todos los valores.`
+  },
+  {
+    chapter: "Capítulo 16",
+    title: "Concurrencia",
+    subtitle: "Threads, channels y Mutex",
+    explanation: `<p>Rust hace la concurrencia <strong>segura en tiempo de compilación</strong>. El sistema de ownership previene data races automáticamente. Puedes crear threads con <code>std::thread::spawn</code> y mover datos al thread con <code>move</code>.</p>
+<p>Los <strong>channels</strong> (<code>mpsc</code>) permiten comunicación entre threads — un patrón de "message passing" donde un productor envía datos que un consumidor recibe. Es como un río: múltiples productores, un consumidor.</p>
+<p><code>Mutex&lt;T&gt;</code> permite acceso exclusivo a datos compartidos. <code>Arc&lt;T&gt;</code> (Atomic Rc) es la versión thread-safe de <code>Rc</code>. Juntos, <code>Arc&lt;Mutex&lt;T&gt;&gt;</code> es el patrón estándar para estado compartido entre threads.</p>`,
+    code: `use std::thread;
+use std::sync::{mpsc, Arc, Mutex};
+use std::time::Duration;
+
+fn main() {
+    // === THREADS BÁSICOS ===
+    println!("🧵 Threads básicos:");
+    let handles: Vec<_> = (1..=3).map(|i| {
+        thread::spawn(move || {
+            thread::sleep(Duration::from_millis(50 * i));
+            format!("Thread {} completado", i)
+        })
+    }).collect();
+
+    for handle in handles {
+        println!("  {}", handle.join().unwrap());
+    }
+
+    // === CHANNELS ===
+    println!("\\n📬 Channels (message passing):");
+    let (tx, rx) = mpsc::channel();
+
+    // Múltiples productores
+    for i in 0..4 {
+        let tx_clone = tx.clone();
+        thread::spawn(move || {
+            let msgs = vec![
+                format!("Hola desde thread {}", i),
+                format!("Thread {} dice adiós", i),
+            ];
+            for msg in msgs {
+                tx_clone.send(msg).unwrap();
+                thread::sleep(Duration::from_millis(20));
+            }
+        });
+    }
+    drop(tx);  // cerrar el sender original
+
+    for msg in rx {
+        println!("  📩 {}", msg);
+    }
+
+    // === MUTEX + ARC ===
+    println!("\\n🔒 Mutex + Arc (estado compartido):");
+    let contador = Arc::new(Mutex::new(0));
+    let resultados = Arc::new(Mutex::new(Vec::new()));
+
+    let handles: Vec<_> = (0..5).map(|i| {
+        let contador = Arc::clone(&contador);
+        let resultados = Arc::clone(&resultados);
+
+        thread::spawn(move || {
+            let mut num = contador.lock().unwrap();
+            *num += 1;
+            let valor = *num;
+            drop(num);  // liberar el lock temprano
+
+            resultados.lock().unwrap().push(
+                format!("Thread {} → contador = {}", i, valor)
+            );
+        })
+    }).collect();
+
+    for handle in handles {
+        handle.join().unwrap();
+    }
+
+    let final_count = *contador.lock().unwrap();
+    println!("  Contador final: {}", final_count);
+
+    for r in resultados.lock().unwrap().iter() {
+        println!("  {}", r);
+    }
+}`,
+    challenge: `Crea un programa que use 4 threads para calcular la suma de diferentes rangos de números (1-250, 251-500, 501-750, 751-1000) en paralelo. Usa channels para enviar los resultados parciales y calcula el total en el thread principal.`
+  },
+];
+
+// ─── APP STATE ───
+let currentLesson = 0;
+let editor = null;
+
+// ─── RENDER SIDEBAR ───
+function renderSidebar() {
+  const list = document.getElementById('chapter-list');
+  list.innerHTML = lessons.map((l, i) => `
+    <div class="chapter-item ${i === currentLesson ? 'active' : ''}" onclick="goToLesson(${i})">
+      <span class="ch-num">${l.chapter}</span>
+      ${l.title}
+    </div>
+  `).join('');
+}
+
+// ─── LOAD LESSON ───
+function loadLesson(index) {
+  currentLesson = index;
+  const l = lessons[index];
+
+  document.getElementById('lesson-title').textContent = l.title;
+  document.getElementById('lesson-subtitle').textContent = `${l.chapter} — ${l.subtitle}`;
+  document.getElementById('lesson-explanation').innerHTML = l.explanation;
+  document.getElementById('challenge-text').innerHTML = l.challenge;
+  document.getElementById('output').textContent = 'Haz clic en "Ejecutar" para compilar y ejecutar tu código.';
+  document.getElementById('output-status').className = '';
+
+  if (editor) editor.setValue(l.code);
+
+  document.getElementById('prev-btn').disabled = index === 0;
+  document.getElementById('next-btn').disabled = index === lessons.length - 1;
+
+  renderSidebar();
+  document.getElementById('content').scrollTo(0, 0);
+}
+
+function goToLesson(i) {
+  loadLesson(i);
+  // Close sidebar on mobile
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+}
+
+function navigate(dir) {
+  const next = currentLesson + dir;
+  if (next >= 0 && next < lessons.length) loadLesson(next);
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('open');
+}
+
+// ─── RUN CODE ───
+async function runCode() {
+  const btn = document.getElementById('run-btn');
+  const output = document.getElementById('output');
+  const status = document.getElementById('output-status');
+
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Compilando...';
+  output.textContent = 'Compilando y ejecutando...';
+  status.className = 'running';
+
+  const code = editor.getValue();
+
+  try {
+    const resp = await fetch('https://play.rust-lang.org/execute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        channel: 'stable',
+        mode: 'debug',
+        edition: '2024',
+        crateType: 'bin',
+        tests: false,
+        code: code,
+        backtrace: false,
+      })
+    });
+
+    const data = await resp.json();
+    const hasError = data.stderr && (data.stderr.includes('error') || !data.success);
+
+    if (data.success) {
+      output.textContent = data.stdout || '(sin salida)';
+      if (data.stderr) output.textContent += '\n\n⚠️ Warnings:\n' + data.stderr;
+      status.className = 'success';
+    } else {
+      output.textContent = data.stderr || data.stdout || 'Error desconocido';
+      status.className = 'error';
+    }
+  } catch (err) {
+    output.textContent = '❌ Error de conexión: ' + err.message;
+    status.className = 'error';
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '▶ Ejecutar';
+}
+
+// ─── KEYBOARD SHORTCUT ───
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    e.preventDefault();
+    runCode();
+  }
+});
+
+// ─── INIT MONACO ───
+require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' } });
+
+require(['vs/editor/editor.main'], function () {
+  monaco.editor.defineTheme('rust-dark', {
+    base: 'vs-dark',
+    inherit: true,
+    rules: [
+      { token: 'keyword', foreground: 'c39bd3' },
+      { token: 'string', foreground: 'e8590c' },
+      { token: 'comment', foreground: '6a5f7a', fontStyle: 'italic' },
+      { token: 'number', foreground: 'f1c40f' },
+      { token: 'type', foreground: '2ecc71' },
+    ],
+    colors: {
+      'editor.background': '#1e1e2e',
+      'editor.foreground': '#e8e0f0',
+      'editorLineNumber.foreground': '#4a3f5a',
+      'editorCursor.foreground': '#e8590c',
+      'editor.selectionBackground': '#3a2a5a',
+      'editor.lineHighlightBackground': '#252035',
+    }
+  });
+
+  editor = monaco.editor.create(document.getElementById('editor-container'), {
+    value: lessons[0].code,
+    language: 'rust',
+    theme: 'rust-dark',
+    fontSize: 14,
+    fontFamily: "'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace",
+    minimap: { enabled: false },
+    scrollBeyondLastLine: false,
+    padding: { top: 12, bottom: 12 },
+    lineNumbers: 'on',
+    roundedSelection: true,
+    automaticLayout: true,
+    tabSize: 4,
+  });
+
+  // Ctrl+Enter to run
+  editor.addAction({
+    id: 'run-code',
+    label: 'Run Code',
+    keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter],
+    run: runCode,
+  });
+
+  loadLesson(0);
+});
+</script>
+</body>
+</html>
