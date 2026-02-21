@@ -273,18 +273,18 @@ fn clasificar(puntaje: u32) -> &'static str {
 <p>Los <strong>comentarios de documentación</strong> son especiales: <code>///</code> genera documentación para el siguiente elemento, y <code>//!</code> documenta el elemento que los contiene. Estos comentarios soportan Markdown y se procesan con <code>cargo doc</code>.</p>
 <p>La convención en Rust es preferir comentarios de línea sobre comentarios de bloque. Los comentarios de documentación son fundamentales en el ecosistema y se publican automáticamente en docs.rs.</p>`,
   code: `//! Este módulo demuestra los tipos de comentarios en Rust.
-//! Usa `cargo doc --open` para generar documentación HTML.
+//! Usa cargo doc --open para generar documentación HTML.
 
 /// Calcula el factorial de un número.
 ///
 /// # Argumentos
-/// * `n` - El número del cual calcular el factorial
+/// * n - El número del cual calcular el factorial
 ///
 /// # Ejemplos
-/// ```
+/// (ejemplo doc-test)
 /// let resultado = factorial(5);
 /// assert_eq!(resultado, 120);
-/// ```
+/// (fin doc-test)
 ///
 /// # Panics
 /// No entra en pánico para valores válidos de u64.

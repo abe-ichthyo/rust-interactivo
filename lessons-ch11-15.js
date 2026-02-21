@@ -884,11 +884,11 @@ impl Cuenta {
 
 fn main() {
     let cuenta = Cuenta::new("Ana", 1000.0);
-    println!("Saldo: ${:.2}", cuenta.saldo());
+    println!("Saldo: \${:.2}", cuenta.saldo());
     cuenta.depositar(500.0);
-    println!("Después +500: ${:.2}", cuenta.saldo());
+    println!("Después +500: \${:.2}", cuenta.saldo());
     cuenta.retirar(200.0).unwrap();
-    println!("Después -200: ${:.2}", cuenta.saldo());
+    println!("Después -200: \${:.2}", cuenta.saldo());
 
     // Rc<RefCell<T>>
     let shared = Rc::new(RefCell::new(vec![1, 2, 3]));
