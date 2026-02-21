@@ -7,205 +7,205 @@ const chunk = [
 // ══════════════════════════════════════════════════════
 {
   id: "6.1",
-  chapter: "6. Enums y Pattern Matching",
-  title: "6.1 Definiendo Enums",
-  explanation: `<p>Los <strong>enums</strong> en Rust son mucho más poderosos que en otros lenguajes. Cada variante puede contener datos de diferentes tipos: sin datos, tuplas, o structs con campos nombrados.</p>
-<p>El enum más importante de Rust es <code>Option&lt;T&gt;</code>, que reemplaza los valores nulos. Tiene dos variantes: <code>Some(T)</code> cuando hay un valor, y <code>None</code> cuando no lo hay. Esto elimina los errores de null pointer.</p>
-<p>Los enums pueden tener métodos implementados con <code>impl</code>, igual que los structs. Son ideales para modelar estados, mensajes, tipos de datos variantes y máquinas de estado.</p>`,
-  code: `// Enum con diferentes tipos de datos en cada variante
+  chapter: "6. Enums & Pattern Matching",
+  title: "6.1 Defining Enums",
+  explanation: `<p><strong>Enums</strong> in Rust are much more powerful than in other languages. Each variant can hold data of different types: no data, tuples, or structs with named fields.</p>
+<p>The most important enum in Rust is <code>Option&lt;T&gt;</code>, which replaces null values. It has two variants: <code>Some(T)</code> when there is a value, and <code>None</code> when there isn't. This eliminates null pointer errors.</p>
+<p>Enums can have methods implemented with <code>impl</code>, just like structs. They are ideal for modeling states, messages, variant data types, and state machines.</p>`,
+  code: `// Enum with different data types in each variant
 #[derive(Debug)]
-enum Mensaje {
-    Salir,                        // Sin datos
-    Mover { x: i32, y: i32 },   // Struct anónimo
-    Escribir(String),             // Tupla con String
-    CambiarColor(i32, i32, i32), // Tupla con 3 valores
+enum Message {
+    Quit,                         // No data
+    Move { x: i32, y: i32 },    // Anonymous struct
+    Write(String),                // Tuple with String
+    ChangeColor(i32, i32, i32),  // Tuple with 3 values
 }
 
-impl Mensaje {
-    fn procesar(&self) {
+impl Message {
+    fn process(&self) {
         match self {
-            Mensaje::Salir => println!("Saliendo..."),
-            Mensaje::Mover { x, y } => println!("Moviendo a ({}, {})", x, y),
-            Mensaje::Escribir(texto) => println!("Texto: {}", texto),
-            Mensaje::CambiarColor(r, g, b) => println!("Color: ({}, {}, {})", r, g, b),
+            Message::Quit => println!("Quitting..."),
+            Message::Move { x, y } => println!("Moving to ({}, {})", x, y),
+            Message::Write(text) => println!("Text: {}", text),
+            Message::ChangeColor(r, g, b) => println!("Color: ({}, {}, {})", r, g, b),
         }
     }
 }
 
 fn main() {
-    let mensajes = vec![
-        Mensaje::Escribir(String::from("hola")),
-        Mensaje::Mover { x: 10, y: 20 },
-        Mensaje::CambiarColor(255, 0, 128),
-        Mensaje::Salir,
+    let messages = vec![
+        Message::Write(String::from("hello")),
+        Message::Move { x: 10, y: 20 },
+        Message::ChangeColor(255, 0, 128),
+        Message::Quit,
     ];
 
-    for msg in &mensajes {
-        msg.procesar();
+    for msg in &messages {
+        msg.process();
     }
 
-    // Option<T> - reemplaza null
-    let algun_numero: Option<i32> = Some(42);
-    let ningun_numero: Option<i32> = None;
+    // Option<T> - replaces null
+    let some_number: Option<i32> = Some(42);
+    let no_number: Option<i32> = None;
 
-    println!("¿Tiene valor? {}", algun_numero.is_some());
-    println!("Valor o default: {}", ningun_numero.unwrap_or(0));
+    println!("Has value? {}", some_number.is_some());
+    println!("Value or default: {}", no_number.unwrap_or(0));
 
-    // Usar Option con map
-    let resultado = algun_numero.map(|n| n * 2);
-    println!("Doble: {:?}", resultado);
+    // Using Option with map
+    let result = some_number.map(|n| n * 2);
+    println!("Double: {:?}", result);
 }`,
-  challenge: "Crea un enum Forma con variantes Circulo(f64), Rectangulo(f64, f64), y Triangulo(f64, f64, f64). Implementa un método area() que calcule el área según la variante."
+  challenge: "Create an enum Shape with variants Circle(f64), Rectangle(f64, f64), and Triangle(f64, f64, f64). Implement an area() method that calculates the area for each variant."
 },
 {
   id: "6.2",
-  chapter: "6. Enums y Pattern Matching",
-  title: "6.2 El Operador match",
-  explanation: `<p><code>match</code> es una de las características más poderosas de Rust. Compara un valor contra una serie de patrones y ejecuta el código del primer patrón que coincida. El compilador verifica que todos los casos posibles estén cubiertos.</p>
-<p>Los patrones pueden desestructurar enums, tuplas, structs y referencias. Puedes usar <code>_</code> como patrón comodín para capturar "todo lo demás". Las guardas (<code>if condicion</code>) permiten filtros adicionales.</p>
-<p>Match es una expresión: retorna un valor. Cada brazo debe retornar el mismo tipo. Es exhaustivo: el compilador te obliga a manejar todas las variantes posibles de un enum.</p>`,
+  chapter: "6. Enums & Pattern Matching",
+  title: "6.2 The match Operator",
+  explanation: `<p><code>match</code> is one of Rust's most powerful features. It compares a value against a series of patterns and executes the code of the first matching pattern. The compiler verifies that all possible cases are covered.</p>
+<p>Patterns can destructure enums, tuples, structs, and references. You can use <code>_</code> as a wildcard pattern to catch "everything else." Guards (<code>if condition</code>) allow additional filtering.</p>
+<p>Match is an expression: it returns a value. Each arm must return the same type. It is exhaustive: the compiler forces you to handle all possible variants of an enum.</p>`,
   code: `#[derive(Debug)]
-enum Moneda {
-    Centavo,
-    Cinco,
-    Diez,
-    Veinticinco(EstadoUS),
+enum Coin {
+    Penny,
+    Nickel,
+    Dime,
+    Quarter(UsState),
 }
 
 #[derive(Debug)]
-enum EstadoUS {
+enum UsState {
     Alabama,
     Alaska,
     Arizona,
 }
 
-fn valor_en_centavos(moneda: &Moneda) -> u32 {
-    match moneda {
-        Moneda::Centavo => {
-            println!("¡Centavo de la suerte!");
+fn value_in_cents(coin: &Coin) -> u32 {
+    match coin {
+        Coin::Penny => {
+            println!("Lucky penny!");
             1
         },
-        Moneda::Cinco => 5,
-        Moneda::Diez => 10,
-        Moneda::Veinticinco(estado) => {
-            println!("Veinticinco centavos de {:?}", estado);
+        Coin::Nickel => 5,
+        Coin::Dime => 10,
+        Coin::Quarter(state) => {
+            println!("Quarter from {:?}", state);
             25
         },
     }
 }
 
 fn main() {
-    let monedas = vec![
-        Moneda::Centavo,
-        Moneda::Veinticinco(EstadoUS::Alaska),
-        Moneda::Diez,
+    let coins = vec![
+        Coin::Penny,
+        Coin::Quarter(UsState::Alaska),
+        Coin::Dime,
     ];
 
-    let total: u32 = monedas.iter().map(|m| valor_en_centavos(m)).sum();
-    println!("Total: {} centavos", total);
+    let total: u32 = coins.iter().map(|m| value_in_cents(m)).sum();
+    println!("Total: {} cents", total);
 
-    // Match con Option
-    let cinco = Some(5);
-    let seis = mas_uno(cinco);
-    let nada = mas_uno(None);
-    println!("seis: {:?}, nada: {:?}", seis, nada);
+    // Match with Option
+    let five = Some(5);
+    let six = plus_one(five);
+    let none = plus_one(None);
+    println!("six: {:?}, none: {:?}", six, none);
 
-    // Match con guardas y comodín
-    let numero = 13;
-    let texto = match numero {
-        1 => "uno",
-        2 | 3 | 5 | 7 | 11 | 13 => "primo",
-        n if n % 2 == 0 => "par",
-        _ => "otro impar",
+    // Match with guards and wildcard
+    let number = 13;
+    let text = match number {
+        1 => "one",
+        2 | 3 | 5 | 7 | 11 | 13 => "prime",
+        n if n % 2 == 0 => "even",
+        _ => "other odd",
     };
-    println!("{} es {}", numero, texto);
+    println!("{} is {}", number, text);
 
-    // Match con rangos
-    let nota = 85;
-    let calificacion = match nota {
+    // Match with ranges
+    let score = 85;
+    let grade = match score {
         90..=100 => "A",
         80..=89 => "B",
         70..=79 => "C",
         _ => "F",
     };
-    println!("Nota {}: {}", nota, calificacion);
+    println!("Score {}: {}", score, grade);
 }
 
-fn mas_uno(x: Option<i32>) -> Option<i32> {
+fn plus_one(x: Option<i32>) -> Option<i32> {
     match x {
         None => None,
         Some(i) => Some(i + 1),
     }
 }`,
-  challenge: "Crea un enum Operacion con variantes Suma, Resta, Multiplicacion, Division. Escribe una función calcular que reciba dos f64 y una Operacion, retornando Option<f64> (None para división por cero)."
+  challenge: "Create an enum Operation with variants Add, Subtract, Multiply, Division. Write a calculate function that receives two f64 and an Operation, returning Option<f64> (None for division by zero)."
 },
 {
   id: "6.3",
-  chapter: "6. Enums y Pattern Matching",
-  title: "6.3 Control Conciso con if let",
-  explanation: `<p><code>if let</code> es azúcar sintáctico para un <code>match</code> que solo maneja un patrón e ignora el resto. Es más conciso cuando solo te interesa un caso específico.</p>
-<p>Puedes combinarlo con <code>else</code> para manejar el caso "todo lo demás". También existe <code>while let</code> que ejecuta un bucle mientras el patrón coincida, útil para iterar sobre Options.</p>
-<p>La elección entre <code>match</code> e <code>if let</code> depende del contexto: usa <code>match</code> cuando necesitas exhaustividad, y <code>if let</code> cuando solo te importa un caso y quieres código más limpio.</p>`,
+  chapter: "6. Enums & Pattern Matching",
+  title: "6.3 Concise Control with if let",
+  explanation: `<p><code>if let</code> is syntactic sugar for a <code>match</code> that only handles one pattern and ignores the rest. It is more concise when you only care about one specific case.</p>
+<p>You can combine it with <code>else</code> to handle the "everything else" case. There is also <code>while let</code> which runs a loop while the pattern matches, useful for iterating over Options.</p>
+<p>The choice between <code>match</code> and <code>if let</code> depends on context: use <code>match</code> when you need exhaustiveness, and <code>if let</code> when you only care about one case and want cleaner code.</p>`,
   code: `fn main() {
-    // match verbose para un solo caso
+    // Verbose match for a single case
     let config_max = Some(3u8);
     match config_max {
-        Some(max) => println!("Máximo configurado: {}", max),
+        Some(max) => println!("Max configured: {}", max),
         _ => (),
     }
 
-    // if let: más conciso
+    // if let: more concise
     if let Some(max) = config_max {
-        println!("Máximo (con if let): {}", max);
+        println!("Max (with if let): {}", max);
     }
 
-    // if let con else
-    let moneda = "veinticinco";
-    if let "veinticinco" = moneda {
-        println!("¡Encontré un quarter!");
+    // if let with else
+    let coin = "quarter";
+    if let "quarter" = coin {
+        println!("Found a quarter!");
     } else {
-        println!("No es un quarter");
+        println!("Not a quarter");
     }
 
-    // while let: iterar mientras haya coincidencia
-    let mut pila = vec![1, 2, 3, 4, 5];
-    while let Some(tope) = pila.pop() {
-        println!("Sacando: {}", tope);
+    // while let: iterate while there's a match
+    let mut stack = vec![1, 2, 3, 4, 5];
+    while let Some(top) = stack.pop() {
+        println!("Popping: {}", top);
     }
 
-    // if let con enums
+    // if let with enums
     #[derive(Debug)]
-    enum Resultado {
+    enum Result {
         Ok(String),
         Error(String),
-        Pendiente,
+        Pending,
     }
 
-    let resultados = vec![
-        Resultado::Ok(String::from("datos")),
-        Resultado::Error(String::from("timeout")),
-        Resultado::Pendiente,
-        Resultado::Ok(String::from("más datos")),
+    let results = vec![
+        Result::Ok(String::from("data")),
+        Result::Error(String::from("timeout")),
+        Result::Pending,
+        Result::Ok(String::from("more data")),
     ];
 
-    let mut exitosos = 0;
-    for r in &resultados {
-        if let Resultado::Ok(datos) = r {
-            println!("Éxito: {}", datos);
-            exitosos += 1;
+    let mut successes = 0;
+    for r in &results {
+        if let Result::Ok(data) = r {
+            println!("Success: {}", data);
+            successes += 1;
         }
     }
-    println!("Total exitosos: {}", exitosos);
+    println!("Total successes: {}", successes);
 
-    // Combinando if let con otras condiciones
-    let edad: Option<u32> = Some(25);
-    if let Some(e) = edad {
-        if e >= 18 {
-            println!("Mayor de edad: {} años", e);
+    // Combining if let with other conditions
+    let age: Option<u32> = Some(25);
+    if let Some(a) = age {
+        if a >= 18 {
+            println!("Adult: {} years old", a);
         }
     }
 }`,
-  challenge: "Crea un programa que procese un vector de Option<String> representando mensajes. Usa if let para imprimir solo los mensajes que existen, y while let para procesar una cola de tareas."
+  challenge: "Create a program that processes a vector of Option<String> representing messages. Use if let to print only the messages that exist, and while let to process a task queue."
 },
 
 // ══════════════════════════════════════════════════════
@@ -213,95 +213,95 @@ fn mas_uno(x: Option<i32>) -> Option<i32> {
 // ══════════════════════════════════════════════════════
 {
   id: "7.1",
-  chapter: "7. Paquetes y Módulos",
-  title: "7.1 Paquetes y Crates",
-  explanation: `<p>Un <strong>crate</strong> es la unidad mínima de compilación en Rust. Puede ser un <em>binary crate</em> (ejecutable con main) o un <em>library crate</em> (código reutilizable). Un <strong>package</strong> es un conjunto de crates definido por Cargo.toml.</p>
-<p>Un package puede contener múltiples binary crates (en src/bin/) pero solo un library crate (src/lib.rs). El archivo src/main.rs es la raíz del binary crate, y src/lib.rs la raíz del library crate.</p>
-<p>El <strong>crate root</strong> es el archivo desde donde el compilador empieza. Los módulos y todo el árbol de código se construyen a partir de este punto de entrada.</p>`,
-  code: `// Simulación de estructura de un package
-// mi_proyecto/
+  chapter: "7. Packages & Modules",
+  title: "7.1 Packages and Crates",
+  explanation: `<p>A <strong>crate</strong> is the smallest unit of compilation in Rust. It can be a <em>binary crate</em> (executable with main) or a <em>library crate</em> (reusable code). A <strong>package</strong> is a set of crates defined by Cargo.toml.</p>
+<p>A package can contain multiple binary crates (in src/bin/) but only one library crate (src/lib.rs). The file src/main.rs is the binary crate root, and src/lib.rs is the library crate root.</p>
+<p>The <strong>crate root</strong> is the file where the compiler starts. Modules and the entire code tree are built from this entry point.</p>`,
+  code: `// Simulation of a package structure
+// my_project/
 // ├── Cargo.toml
 // ├── src/
 // │   ├── main.rs      (binary crate root)
 // │   ├── lib.rs        (library crate root)
 // │   └── bin/
-// │       ├── server.rs (otro binary crate)
-// │       └── client.rs (otro binary crate)
+// │       ├── server.rs (another binary crate)
+// │       └── client.rs (another binary crate)
 
-// En un proyecto real, Cargo.toml define el package:
+// In a real project, Cargo.toml defines the package:
 // [package]
-// name = "mi_proyecto"
+// name = "my_project"
 // version = "0.1.0"
 // edition = "2021"
 
 fn main() {
-    println!("=== Paquetes y Crates en Rust ===");
+    println!("=== Packages and Crates in Rust ===");
 
-    let conceptos = vec![
-        ("Crate", "Unidad mínima de compilación"),
-        ("Binary crate", "Genera un ejecutable (tiene main)"),
-        ("Library crate", "Código reutilizable (sin main)"),
-        ("Package", "Conjunto de crates (Cargo.toml)"),
-        ("Crate root", "Archivo raíz de compilación"),
+    let concepts = vec![
+        ("Crate", "Smallest unit of compilation"),
+        ("Binary crate", "Generates an executable (has main)"),
+        ("Library crate", "Reusable code (no main)"),
+        ("Package", "Set of crates (Cargo.toml)"),
+        ("Crate root", "Root compilation file"),
     ];
 
-    for (concepto, desc) in &conceptos {
-        println!("• {}: {}", concepto, desc);
+    for (concept, desc) in &concepts {
+        println!("• {}: {}", concept, desc);
     }
 
-    println!("\\nReglas de un package:");
-    println!("  - 0 o 1 library crate");
-    println!("  - 0 o más binary crates");
-    println!("  - Al menos 1 crate (library o binary)");
+    println!("\\nPackage rules:");
+    println!("  - 0 or 1 library crate");
+    println!("  - 0 or more binary crates");
+    println!("  - At least 1 crate (library or binary)");
 }`,
-  challenge: "Describe la estructura de directorios de un package que tenga un library crate y dos binary crates. Imprime el árbol de archivos como texto formateado."
+  challenge: "Describe the directory structure of a package that has a library crate and two binary crates. Print the file tree as formatted text."
 },
 {
   id: "7.2",
-  chapter: "7. Paquetes y Módulos",
-  title: "7.2 Definiendo Módulos",
-  explanation: `<p>Los <strong>módulos</strong> organizan el código dentro de un crate en grupos lógicos con control de visibilidad. Se definen con <code>mod</code> y pueden anidarse. Todo es privado por defecto.</p>
-<p>El árbol de módulos comienza en el crate root. Los módulos pueden definirse inline (dentro del archivo) o en archivos separados. El compilador busca módulos en rutas específicas.</p>
-<p>La visibilidad se controla con <code>pub</code>: un módulo público permite acceso desde fuera, pero sus contenidos siguen siendo privados a menos que también sean <code>pub</code>.</p>`,
-  code: `// Definir módulos inline
-mod restaurante {
-    pub mod recepcion {
-        pub fn agregar_a_lista_espera() {
-            println!("Agregado a lista de espera");
+  chapter: "7. Packages & Modules",
+  title: "7.2 Defining Modules",
+  explanation: `<p><strong>Modules</strong> organize code within a crate into logical groups with visibility control. They are defined with <code>mod</code> and can be nested. Everything is private by default.</p>
+<p>The module tree starts at the crate root. Modules can be defined inline (within the file) or in separate files. The compiler looks for modules at specific paths.</p>
+<p>Visibility is controlled with <code>pub</code>: a public module allows access from outside, but its contents remain private unless they are also <code>pub</code>.</p>`,
+  code: `// Define inline modules
+mod restaurant {
+    pub mod front_of_house {
+        pub fn add_to_waitlist() {
+            println!("Added to waitlist");
         }
 
-        pub fn sentar_en_mesa() {
-            println!("Sentado en mesa");
-        }
-    }
-
-    mod cocina {
-        fn preparar_orden() {
-            println!("Preparando orden...");
-        }
-
-        pub fn servir_orden() {
-            preparar_orden(); // Puede acceder a privados del mismo módulo
-            println!("¡Orden servida!");
-            super::recepcion::agregar_a_lista_espera(); // super = módulo padre
+        pub fn seat_at_table() {
+            println!("Seated at table");
         }
     }
 
-    pub fn operar() {
-        recepcion::agregar_a_lista_espera();
-        cocina::servir_orden(); // OK: cocina es hijo de restaurante
+    mod kitchen {
+        fn prepare_order() {
+            println!("Preparing order...");
+        }
+
+        pub fn serve_order() {
+            prepare_order(); // Can access private items in the same module
+            println!("Order served!");
+            super::front_of_house::add_to_waitlist(); // super = parent module
+        }
+    }
+
+    pub fn operate() {
+        front_of_house::add_to_waitlist();
+        kitchen::serve_order(); // OK: kitchen is a child of restaurant
     }
 }
 
-mod utilidades {
-    pub mod matematicas {
+mod utilities {
+    pub mod math {
         pub fn factorial(n: u64) -> u64 {
             if n <= 1 { 1 } else { n * factorial(n - 1) }
         }
     }
 
-    pub mod texto {
-        pub fn capitalizar(s: &str) -> String {
+    pub mod text {
+        pub fn capitalize(s: &str) -> String {
             let mut chars = s.chars();
             match chars.next() {
                 None => String::new(),
@@ -312,241 +312,241 @@ mod utilidades {
 }
 
 fn main() {
-    // Ruta absoluta desde crate root
-    restaurante::recepcion::agregar_a_lista_espera();
+    // Absolute path from crate root
+    restaurant::front_of_house::add_to_waitlist();
 
-    // Usando el módulo
-    restaurante::operar();
+    // Using the module
+    restaurant::operate();
 
-    // Módulos de utilidades
-    println!("5! = {}", utilidades::matematicas::factorial(5));
-    println!("{}", utilidades::texto::capitalizar("hola mundo"));
+    // Utility modules
+    println!("5! = {}", utilities::math::factorial(5));
+    println!("{}", utilities::text::capitalize("hello world"));
 }`,
-  challenge: "Crea un módulo 'tienda' con submódulos 'inventario' y 'ventas'. Inventario debe tener funciones para agregar y listar productos. Ventas debe poder consultar el inventario."
+  challenge: "Create a 'store' module with submodules 'inventory' and 'sales'. Inventory should have functions to add and list products. Sales should be able to query the inventory."
 },
 {
   id: "7.3",
-  chapter: "7. Paquetes y Módulos",
-  title: "7.3 Rutas para Referir Ítems",
-  explanation: `<p>Para acceder a un ítem en el árbol de módulos, usas una <strong>ruta</strong>. Las rutas pueden ser absolutas (desde el crate root con <code>crate::</code>) o relativas (desde el módulo actual).</p>
-<p><code>super</code> permite ir al módulo padre, similar a <code>..</code> en el sistema de archivos. Es útil cuando sabes que la relación entre módulos se mantendrá aunque los muevas.</p>
-<p>Puedes hacer públicos los campos de un struct individualmente. En enums, si el enum es público, todas sus variantes son públicas automáticamente.</p>`,
-  code: `mod jardin {
-    pub mod vegetales {
+  chapter: "7. Packages & Modules",
+  title: "7.3 Paths for Referring to Items",
+  explanation: `<p>To access an item in the module tree, you use a <strong>path</strong>. Paths can be absolute (from the crate root with <code>crate::</code>) or relative (from the current module).</p>
+<p><code>super</code> lets you go to the parent module, similar to <code>..</code> in the file system. It is useful when you know the relationship between modules will be maintained even if you move them.</p>
+<p>You can make struct fields public individually. In enums, if the enum is public, all its variants are automatically public.</p>`,
+  code: `mod garden {
+    pub mod vegetables {
         #[derive(Debug)]
-        pub struct Planta {
-            pub nombre: String,
-            pub altura_cm: f64,
-            ubicacion: String, // privado
+        pub struct Plant {
+            pub name: String,
+            pub height_cm: f64,
+            location: String, // private
         }
 
-        impl Planta {
-            pub fn new(nombre: &str, ubicacion: &str) -> Planta {
-                Planta {
-                    nombre: String::from(nombre),
-                    altura_cm: 0.0,
-                    ubicacion: String::from(ubicacion),
+        impl Plant {
+            pub fn new(name: &str, location: &str) -> Plant {
+                Plant {
+                    name: String::from(name),
+                    height_cm: 0.0,
+                    location: String::from(location),
                 }
             }
 
-            pub fn crecer(&mut self, cm: f64) {
-                self.altura_cm += cm;
-                println!("{} creció a {} cm", self.nombre, self.altura_cm);
+            pub fn grow(&mut self, cm: f64) {
+                self.height_cm += cm;
+                println!("{} grew to {} cm", self.name, self.height_cm);
             }
         }
 
-        // Enum público = variantes públicas
+        // Public enum = public variants
         #[derive(Debug)]
-        pub enum Estacion {
-            Primavera,
-            Verano,
-            Otono,
-            Invierno,
+        pub enum Season {
+            Spring,
+            Summer,
+            Autumn,
+            Winter,
         }
 
-        pub fn plantar(estacion: &Estacion) {
-            match estacion {
-                Estacion::Primavera => println!("¡Época perfecta para plantar!"),
-                Estacion::Verano => println!("Necesitará más agua"),
-                _ => println!("Mejor esperar a primavera"),
+        pub fn plant(season: &Season) {
+            match season {
+                Season::Spring => println!("Perfect time to plant!"),
+                Season::Summer => println!("It will need more water"),
+                _ => println!("Better wait until spring"),
             }
         }
     }
 
-    pub mod herramientas {
-        pub fn regar() {
-            println!("Regando el jardín...");
-            // super accede al módulo padre (jardin)
-            super::vegetales::plantar(&super::vegetales::Estacion::Verano);
+    pub mod tools {
+        pub fn water() {
+            println!("Watering the garden...");
+            // super accesses the parent module (garden)
+            super::vegetables::plant(&super::vegetables::Season::Summer);
         }
     }
 }
 
 fn main() {
-    // Ruta absoluta
-    let mut tomate = jardin::vegetales::Planta::new("Tomate", "invernadero");
-    tomate.crecer(5.0);
-    tomate.crecer(3.0);
-    println!("Planta: {:?}", tomate);
-    // println!("{}", tomate.ubicacion); // ¡Error! Campo privado
+    // Absolute path
+    let mut tomato = garden::vegetables::Plant::new("Tomato", "greenhouse");
+    tomato.grow(5.0);
+    tomato.grow(3.0);
+    println!("Plant: {:?}", tomato);
+    // println!("{}", tomato.location); // Error! Private field
 
-    // Enum público
-    let estacion = jardin::vegetales::Estacion::Primavera;
-    jardin::vegetales::plantar(&estacion);
+    // Public enum
+    let season = garden::vegetables::Season::Spring;
+    garden::vegetables::plant(&season);
 
-    // Usando super (internamente en herramientas)
-    jardin::herramientas::regar();
+    // Using super (internally in tools)
+    garden::tools::water();
 }`,
-  challenge: "Crea un módulo 'banco' con un struct CuentaBancaria donde el balance sea privado. Implementa métodos públicos para depositar, retirar y consultar balance."
+  challenge: "Create a 'bank' module with a BankAccount struct where the balance is private. Implement public methods to deposit, withdraw, and check balance."
 },
 {
   id: "7.4",
-  chapter: "7. Paquetes y Módulos",
-  title: "7.4 Trayendo Rutas al Ámbito con use",
-  explanation: `<p>La palabra clave <code>use</code> crea atajos para rutas largas, similar a import en otros lenguajes. La convención es importar módulos padre para funciones y el tipo directamente para structs y enums.</p>
-<p>Puedes renombrar imports con <code>as</code> para evitar conflictos de nombres. También puedes re-exportar con <code>pub use</code>, exponiendo ítems internos como parte de tu API pública.</p>
-<p>Para importar múltiples ítems del mismo módulo, usa llaves: <code>use std::io::{self, Write}</code>. El glob operator <code>*</code> importa todo, pero se recomienda evitarlo excepto en tests.</p>`,
-  code: `// Importar con use
+  chapter: "7. Packages & Modules",
+  title: "7.4 Bringing Paths into Scope with use",
+  explanation: `<p>The <code>use</code> keyword creates shortcuts for long paths, similar to import in other languages. The convention is to import parent modules for functions and the type directly for structs and enums.</p>
+<p>You can rename imports with <code>as</code> to avoid name conflicts. You can also re-export with <code>pub use</code>, exposing internal items as part of your public API.</p>
+<p>To import multiple items from the same module, use curly braces: <code>use std::io::{self, Write}</code>. The glob operator <code>*</code> imports everything, but it is recommended to avoid it except in tests.</p>`,
+  code: `// Import with use
 use std::collections::HashMap;
 use std::fmt;
 
-// Renombrar con as
+// Rename with as
 use std::io::Result as IoResult;
 
-// Importar múltiples ítems
+// Import multiple items
 // use std::io::{self, Write, BufRead};
 
-mod formas {
+mod shapes {
     #[derive(Debug)]
-    pub struct Circulo {
-        pub radio: f64,
+    pub struct Circle {
+        pub radius: f64,
     }
 
     #[derive(Debug)]
-    pub struct Cuadrado {
-        pub lado: f64,
+    pub struct Square {
+        pub side: f64,
     }
 
-    pub mod calculos {
-        use super::{Circulo, Cuadrado};
+    pub mod calculations {
+        use super::{Circle, Square};
         use std::f64::consts::PI;
 
-        pub fn area_circulo(c: &Circulo) -> f64 {
-            PI * c.radio * c.radio
+        pub fn circle_area(c: &Circle) -> f64 {
+            PI * c.radius * c.radius
         }
 
-        pub fn area_cuadrado(c: &Cuadrado) -> f64 {
-            c.lado * c.lado
+        pub fn square_area(s: &Square) -> f64 {
+            s.side * s.side
         }
     }
 
-    // Re-exportar para API más limpia
-    pub use calculos::area_circulo;
-    pub use calculos::area_cuadrado;
+    // Re-export for a cleaner API
+    pub use calculations::circle_area;
+    pub use calculations::square_area;
 }
 
-// Usar las re-exportaciones
-use formas::{Circulo, Cuadrado, area_circulo, area_cuadrado};
+// Use the re-exports
+use shapes::{Circle, Square, circle_area, square_area};
 
 fn main() {
-    let c = Circulo { radio: 5.0 };
-    let s = Cuadrado { lado: 4.0 };
+    let c = Circle { radius: 5.0 };
+    let s = Square { side: 4.0 };
 
-    // Gracias a pub use, accedemos directamente
-    println!("Área círculo: {:.2}", area_circulo(&c));
-    println!("Área cuadrado: {:.2}", area_cuadrado(&s));
+    // Thanks to pub use, we access directly
+    println!("Circle area: {:.2}", circle_area(&c));
+    println!("Square area: {:.2}", square_area(&s));
 
-    // HashMap importado con use
-    let mut puntuaciones: HashMap<&str, i32> = HashMap::new();
-    puntuaciones.insert("Alice", 100);
-    puntuaciones.insert("Bob", 85);
+    // HashMap imported with use
+    let mut scores: HashMap<&str, i32> = HashMap::new();
+    scores.insert("Alice", 100);
+    scores.insert("Bob", 85);
 
-    for (nombre, puntos) in &puntuaciones {
-        println!("{}: {} puntos", nombre, puntos);
+    for (name, points) in &scores {
+        println!("{}: {} points", name, points);
     }
 }`,
-  challenge: "Organiza un módulo 'geometria' con sub-módulos 2d y 3d. Usa pub use para re-exportar las funciones más comunes al nivel del módulo geometria."
+  challenge: "Organize a 'geometry' module with sub-modules 2d and 3d. Use pub use to re-export the most common functions to the geometry module level."
 },
 {
   id: "7.5",
-  chapter: "7. Paquetes y Módulos",
-  title: "7.5 Separando Módulos en Archivos",
-  explanation: `<p>En proyectos grandes, los módulos se separan en archivos y directorios. Declaras el módulo con <code>mod nombre;</code> (sin cuerpo) y Rust busca el código en <code>nombre.rs</code> o <code>nombre/mod.rs</code>.</p>
-<p>La estructura de archivos refleja la estructura de módulos: <code>mod ventas;</code> busca <code>ventas.rs</code> o <code>ventas/mod.rs</code>. Los submódulos de ventas irían en <code>ventas/sub.rs</code>.</p>
-<p>La edición 2021 prefiere <code>nombre.rs</code> + <code>nombre/sub.rs</code> sobre el estilo antiguo <code>nombre/mod.rs</code>. Ambos funcionan, pero el nuevo estilo evita tener muchos archivos llamados mod.rs.</p>`,
-  code: `// Estructura de archivos de un proyecto real:
+  chapter: "7. Packages & Modules",
+  title: "7.5 Separating Modules into Files",
+  explanation: `<p>In large projects, modules are separated into files and directories. You declare the module with <code>mod name;</code> (without a body) and Rust looks for the code in <code>name.rs</code> or <code>name/mod.rs</code>.</p>
+<p>The file structure mirrors the module structure: <code>mod sales;</code> looks for <code>sales.rs</code> or <code>sales/mod.rs</code>. Submodules of sales would go in <code>sales/sub.rs</code>.</p>
+<p>The 2021 edition prefers <code>name.rs</code> + <code>name/sub.rs</code> over the old style <code>name/mod.rs</code>. Both work, but the new style avoids having many files called mod.rs.</p>`,
+  code: `// File structure of a real project:
 // src/
 // ├── main.rs          (crate root)
-// ├── lib.rs           (library crate root, opcional)
+// ├── lib.rs           (library crate root, optional)
 // ├── config.rs        (mod config)
-// ├── modelos/         
-// │   ├── mod.rs       (mod modelos - estilo antiguo)
-// │   ├── usuario.rs   (mod modelos::usuario)
-// │   └── producto.rs  (mod modelos::producto)
-// ├── servicios.rs     (mod servicios)
-// └── servicios/
-//     ├── auth.rs      (mod servicios::auth)
-//     └── db.rs        (mod servicios::db)
+// ├── models/
+// │   ├── mod.rs       (mod models - old style)
+// │   ├── user.rs      (mod models::user)
+// │   └── product.rs   (mod models::product)
+// ├── services.rs      (mod services)
+// └── services/
+//     ├── auth.rs      (mod services::auth)
+//     └── db.rs        (mod services::db)
 
-// Simulamos la estructura con módulos inline
+// We simulate the structure with inline modules
 mod config {
     pub const VERSION: &str = "1.0.0";
-    pub const APP_NAME: &str = "MiApp";
+    pub const APP_NAME: &str = "MyApp";
 }
 
-mod modelos {
-    pub mod usuario {
+mod models {
+    pub mod user {
         #[derive(Debug)]
-        pub struct Usuario {
+        pub struct User {
             pub id: u32,
-            pub nombre: String,
+            pub name: String,
         }
     }
 
-    pub mod producto {
+    pub mod product {
         #[derive(Debug)]
-        pub struct Producto {
+        pub struct Product {
             pub id: u32,
-            pub nombre: String,
-            pub precio: f64,
+            pub name: String,
+            pub price: f64,
         }
     }
 }
 
-mod servicios {
-    use super::modelos::usuario::Usuario;
+mod services {
+    use super::models::user::User;
 
-    pub fn crear_usuario(id: u32, nombre: &str) -> Usuario {
-        Usuario {
+    pub fn create_user(id: u32, name: &str) -> User {
+        User {
             id,
-            nombre: String::from(nombre),
+            name: String::from(name),
         }
     }
 
-    pub fn listar_info() {
-        println!("Servicio activo v{}", super::config::VERSION);
+    pub fn list_info() {
+        println!("Service active v{}", super::config::VERSION);
     }
 }
 
-use modelos::producto::Producto;
-use servicios::crear_usuario;
+use models::product::Product;
+use services::create_user;
 
 fn main() {
     println!("{} v{}", config::APP_NAME, config::VERSION);
 
-    let user = crear_usuario(1, "Alice");
-    println!("Usuario: {:?}", user);
+    let user = create_user(1, "Alice");
+    println!("User: {:?}", user);
 
-    let producto = Producto {
+    let product = Product {
         id: 1,
-        nombre: String::from("Laptop"),
-        precio: 999.99,
+        name: String::from("Laptop"),
+        price: 999.99,
     };
-    println!("Producto: {:?}", producto);
+    println!("Product: {:?}", product);
 
-    servicios::listar_info();
+    services::list_info();
 }`,
-  challenge: "Diseña la estructura de módulos para una aplicación web con: modelos (User, Post, Comment), rutas (api, web), y servicios (auth, database). Imprímela como un árbol de archivos."
+  challenge: "Design the module structure for a web application with: models (User, Post, Comment), routes (api, web), and services (auth, database). Print it as a file tree."
 },
 
 // ══════════════════════════════════════════════════════
@@ -554,13 +554,13 @@ fn main() {
 // ══════════════════════════════════════════════════════
 {
   id: "8.1",
-  chapter: "8. Colecciones",
-  title: "8.1 Vectores",
-  explanation: `<p>Los <strong>vectores</strong> (<code>Vec&lt;T&gt;</code>) son arreglos dinámicos que almacenan elementos del mismo tipo en el heap. Se crean con <code>Vec::new()</code> o la macro <code>vec![]</code>.</p>
-<p>Puedes acceder a elementos por índice (puede causar panic) o con <code>get()</code> que retorna <code>Option</code>. Para agregar elementos usa <code>push()</code>, y para iterar usa <code>for item in &vec</code>.</p>
-<p>Un truco para almacenar diferentes tipos es usar un enum como tipo del vector. Las reglas de borrowing aplican: no puedes tener una referencia inmutable y modificar el vector al mismo tiempo.</p>`,
+  chapter: "8. Collections",
+  title: "8.1 Vectors",
+  explanation: `<p><strong>Vectors</strong> (<code>Vec&lt;T&gt;</code>) are dynamic arrays that store elements of the same type on the heap. They are created with <code>Vec::new()</code> or the <code>vec![]</code> macro.</p>
+<p>You can access elements by index (can cause panic) or with <code>get()</code> which returns <code>Option</code>. To add elements use <code>push()</code>, and to iterate use <code>for item in &vec</code>.</p>
+<p>A trick for storing different types is to use an enum as the vector's type. Borrowing rules apply: you cannot have an immutable reference and modify the vector at the same time.</p>`,
   code: `fn main() {
-    // Crear vectores
+    // Create vectors
     let mut v1: Vec<i32> = Vec::new();
     v1.push(1);
     v1.push(2);
@@ -568,169 +568,169 @@ fn main() {
 
     let v2 = vec![10, 20, 30, 40, 50];
 
-    // Acceso por índice (puede panic)
-    let tercero = &v2[2];
-    println!("Tercero: {}", tercero);
+    // Access by index (can panic)
+    let third = &v2[2];
+    println!("Third: {}", third);
 
-    // Acceso seguro con get
+    // Safe access with get
     match v2.get(100) {
-        Some(valor) => println!("Valor: {}", valor),
-        None => println!("No existe ese índice"),
+        Some(value) => println!("Value: {}", value),
+        None => println!("That index doesn't exist"),
     }
 
-    // Iterar
+    // Iterate
     for n in &v2 {
         print!("{} ", n);
     }
     println!();
 
-    // Iterar y modificar
+    // Iterate and modify
     let mut v3 = vec![100, 200, 300];
     for n in &mut v3 {
         *n += 50;
     }
-    println!("Modificado: {:?}", v3);
+    println!("Modified: {:?}", v3);
 
-    // Enum para tipos mixtos en un vector
+    // Enum for mixed types in a vector
     #[derive(Debug)]
-    enum Celda {
-        Entero(i32),
-        Flotante(f64),
-        Texto(String),
+    enum Cell {
+        Int(i32),
+        Float(f64),
+        Text(String),
     }
 
-    let fila = vec![
-        Celda::Entero(42),
-        Celda::Flotante(3.14),
-        Celda::Texto(String::from("hola")),
+    let row = vec![
+        Cell::Int(42),
+        Cell::Float(3.14),
+        Cell::Text(String::from("hello")),
     ];
 
-    for celda in &fila {
-        match celda {
-            Celda::Entero(n) => println!("Int: {}", n),
-            Celda::Flotante(f) => println!("Float: {}", f),
-            Celda::Texto(s) => println!("Str: {}", s),
+    for cell in &row {
+        match cell {
+            Cell::Int(n) => println!("Int: {}", n),
+            Cell::Float(f) => println!("Float: {}", f),
+            Cell::Text(s) => println!("Str: {}", s),
         }
     }
 
-    // Métodos útiles
+    // Useful methods
     let nums = vec![5, 2, 8, 1, 9, 3];
-    println!("Len: {}, Vacío: {}", nums.len(), nums.is_empty());
-    println!("Contiene 8: {}", nums.contains(&8));
+    println!("Len: {}, Empty: {}", nums.len(), nums.is_empty());
+    println!("Contains 8: {}", nums.contains(&8));
 }`,
-  challenge: "Crea un programa que simule una lista de compras usando un Vec. Implementa funciones para agregar, eliminar, buscar y mostrar items."
+  challenge: "Create a program that simulates a shopping list using a Vec. Implement functions to add, remove, search, and display items."
 },
 {
   id: "8.2",
-  chapter: "8. Colecciones",
+  chapter: "8. Collections",
   title: "8.2 Strings",
-  explanation: `<p>En Rust hay dos tipos principales de strings: <code>String</code> (owned, mutable, en el heap) y <code>&str</code> (slice, referencia inmutable). Los strings en Rust son siempre UTF-8 válido.</p>
-<p>Concatenar strings se puede hacer con <code>push_str()</code>, <code>push()</code>, el operador <code>+</code>, o la macro <code>format!()</code>. El operador + toma ownership del primer string.</p>
-<p>Indexar strings directamente no es posible porque los caracteres UTF-8 pueden ser multi-byte. Usa <code>chars()</code> para iterar por caracteres o <code>bytes()</code> para bytes individuales.</p>`,
+  explanation: `<p>In Rust there are two main string types: <code>String</code> (owned, mutable, on the heap) and <code>&str</code> (slice, immutable reference). Strings in Rust are always valid UTF-8.</p>
+<p>Concatenating strings can be done with <code>push_str()</code>, <code>push()</code>, the <code>+</code> operator, or the <code>format!()</code> macro. The + operator takes ownership of the first string.</p>
+<p>Directly indexing strings is not possible because UTF-8 characters can be multi-byte. Use <code>chars()</code> to iterate by characters or <code>bytes()</code> for individual bytes.</p>`,
   code: `fn main() {
-    // Crear strings
+    // Create strings
     let mut s1 = String::new();
-    let s2 = "hola".to_string();
-    let s3 = String::from("mundo");
+    let s2 = "hello".to_string();
+    let s3 = String::from("world");
 
-    // Agregar contenido
-    s1.push_str("¡Hola ");
+    // Append content
+    s1.push_str("Hello ");
     s1.push_str(&s2);
     s1.push('!');
     println!("{}", s1);
 
-    // Concatenar con +
-    let saludo = s2 + " " + &s3; // s2 se mueve, s3 se presta
-    println!("{}", saludo);
+    // Concatenate with +
+    let greeting = s2 + " " + &s3; // s2 is moved, s3 is borrowed
+    println!("{}", greeting);
 
-    // format! (no toma ownership)
+    // format! (doesn't take ownership)
     let s4 = String::from("Rust");
-    let s5 = String::from("genial");
-    let oracion = format!("{} es {}", s4, s5);
-    println!("{}", oracion);
-    println!("Originales: {} {}", s4, s5); // Siguen válidos
+    let s5 = String::from("great");
+    let sentence = format!("{} is {}", s4, s5);
+    println!("{}", sentence);
+    println!("Originals: {} {}", s4, s5); // Still valid
 
-    // NO se puede indexar directamente
-    let hola = String::from("Здравствуйте"); // Ruso
-    // let h = hola[0]; // ¡Error!
+    // You CANNOT index directly
+    let hello = String::from("Здравствуйте"); // Russian
+    // let h = hello[0]; // Error!
 
-    // Iterar por caracteres
-    for c in hola.chars() {
+    // Iterate by characters
+    for c in hello.chars() {
         print!("{} ", c);
     }
     println!();
 
-    // Slices (cuidado con límites de caracteres)
+    // Slices (be careful with character boundaries)
     let hello = String::from("Здравствуйте");
-    let s = &hello[0..4]; // Primeros 2 caracteres cirílicos (2 bytes cada uno)
+    let s = &hello[0..4]; // First 2 Cyrillic characters (2 bytes each)
     println!("Slice: {}", s);
 
-    // Métodos útiles
-    let texto = String::from("  Hola Mundo  ");
-    println!("Trim: '{}'", texto.trim());
-    println!("Upper: {}", texto.to_uppercase());
-    println!("Replace: {}", texto.replace("Mundo", "Rust"));
-    println!("Contains: {}", texto.contains("Mundo"));
+    // Useful methods
+    let text = String::from("  Hello World  ");
+    println!("Trim: '{}'", text.trim());
+    println!("Upper: {}", text.to_uppercase());
+    println!("Replace: {}", text.replace("World", "Rust"));
+    println!("Contains: {}", text.contains("World"));
 
     // Split
-    let csv = "uno,dos,tres,cuatro";
-    let partes: Vec<&str> = csv.split(',').collect();
-    println!("Partes: {:?}", partes);
+    let csv = "one,two,three,four";
+    let parts: Vec<&str> = csv.split(',').collect();
+    println!("Parts: {:?}", parts);
 }`,
-  challenge: "Escribe una función que reciba un &str y retorne un String con cada palabra capitalizada (primera letra mayúscula). Maneja correctamente strings con múltiples espacios."
+  challenge: "Write a function that receives a &str and returns a String with each word capitalized (first letter uppercase). Handle strings with multiple spaces correctly."
 },
 {
   id: "8.3",
-  chapter: "8. Colecciones",
+  chapter: "8. Collections",
   title: "8.3 HashMaps",
-  explanation: `<p>Los <strong>HashMaps</strong> almacenan pares clave-valor con búsqueda O(1). Se importan con <code>use std::collections::HashMap</code>. Las claves deben implementar <code>Eq</code> y <code>Hash</code>.</p>
-<p>El método <code>entry()</code> es muy útil: permite verificar si existe una clave e insertar un valor default si no existe, con <code>or_insert()</code>. Esto evita búsquedas duplicadas.</p>
-<p>Para tipos que implementan <code>Copy</code> (como i32), los valores se copian al HashMap. Para tipos owned como String, el HashMap toma ownership de los valores insertados.</p>`,
+  explanation: `<p><strong>HashMaps</strong> store key-value pairs with O(1) lookup. They are imported with <code>use std::collections::HashMap</code>. Keys must implement <code>Eq</code> and <code>Hash</code>.</p>
+<p>The <code>entry()</code> method is very useful: it lets you check if a key exists and insert a default value if it doesn't, with <code>or_insert()</code>. This avoids duplicate lookups.</p>
+<p>For types that implement <code>Copy</code> (like i32), values are copied into the HashMap. For owned types like String, the HashMap takes ownership of the inserted values.</p>`,
   code: `use std::collections::HashMap;
 
 fn main() {
-    // Crear y llenar
-    let mut puntuaciones = HashMap::new();
-    puntuaciones.insert(String::from("Azul"), 10);
-    puntuaciones.insert(String::from("Rojo"), 50);
+    // Create and populate
+    let mut scores = HashMap::new();
+    scores.insert(String::from("Blue"), 10);
+    scores.insert(String::from("Red"), 50);
 
-    // Acceder
-    let equipo = String::from("Azul");
-    let puntaje = puntuaciones.get(&equipo).copied().unwrap_or(0);
-    println!("{}: {}", equipo, puntaje);
+    // Access
+    let team = String::from("Blue");
+    let score = scores.get(&team).copied().unwrap_or(0);
+    println!("{}: {}", team, score);
 
-    // Iterar
-    for (clave, valor) in &puntuaciones {
-        println!("{}: {}", clave, valor);
+    // Iterate
+    for (key, value) in &scores {
+        println!("{}: {}", key, value);
     }
 
-    // Sobrescribir
-    puntuaciones.insert(String::from("Azul"), 25);
-    println!("Azul actualizado: {:?}", puntuaciones);
+    // Overwrite
+    scores.insert(String::from("Blue"), 25);
+    println!("Blue updated: {:?}", scores);
 
-    // entry: insertar solo si no existe
-    puntuaciones.entry(String::from("Verde")).or_insert(30);
-    puntuaciones.entry(String::from("Azul")).or_insert(999); // No cambia
-    println!("Con entry: {:?}", puntuaciones);
+    // entry: insert only if it doesn't exist
+    scores.entry(String::from("Green")).or_insert(30);
+    scores.entry(String::from("Blue")).or_insert(999); // Doesn't change
+    println!("With entry: {:?}", scores);
 
-    // Contar palabras con entry
-    let texto = "hola mundo hola rust mundo hola";
-    let mut conteo = HashMap::new();
-    for palabra in texto.split_whitespace() {
-        let cuenta = conteo.entry(palabra).or_insert(0);
-        *cuenta += 1;
+    // Count words with entry
+    let text = "hello world hello rust world hello";
+    let mut word_count = HashMap::new();
+    for word in text.split_whitespace() {
+        let count = word_count.entry(word).or_insert(0);
+        *count += 1;
     }
-    println!("Conteo: {:?}", conteo);
+    println!("Word count: {:?}", word_count);
 
-    // Crear desde iterador de tuplas
-    let equipos = vec!["Luna", "Sol", "Estrella"];
-    let puntajes_iniciales = vec![0, 0, 0];
-    let tabla: HashMap<_, _> = equipos.into_iter()
-        .zip(puntajes_iniciales.into_iter())
+    // Create from iterator of tuples
+    let teams = vec!["Moon", "Sun", "Star"];
+    let initial_scores = vec![0, 0, 0];
+    let table: HashMap<_, _> = teams.into_iter()
+        .zip(initial_scores.into_iter())
         .collect();
-    println!("Tabla: {:?}", tabla);
+    println!("Table: {:?}", table);
 }`,
-  challenge: "Crea un programa que lea una lista de estudiantes con sus calificaciones y calcule: el promedio por estudiante, la calificación más alta global, y cuántos estudiantes aprobaron (>=70)."
+  challenge: "Create a program that reads a list of students with their grades and calculates: the average per student, the highest grade overall, and how many students passed (>=70)."
 },
 
 // ══════════════════════════════════════════════════════
@@ -738,86 +738,86 @@ fn main() {
 // ══════════════════════════════════════════════════════
 {
   id: "9.1",
-  chapter: "9. Manejo de Errores",
-  title: "9.1 Errores Irrecuperables con panic!",
-  explanation: `<p>Rust tiene dos categorías de errores: irrecuperables (<code>panic!</code>) y recuperables (<code>Result</code>). Un <code>panic!</code> detiene la ejecución, imprime un mensaje de error y limpia el stack.</p>
-<p>Los panics ocurren explícitamente con la macro <code>panic!()</code> o implícitamente cuando accedes a un índice fuera de rango, por ejemplo. La variable de entorno <code>RUST_BACKTRACE=1</code> muestra el backtrace completo.</p>
-<p>En producción, los panics pueden configurarse para hacer <em>abort</em> (terminar sin limpiar) en Cargo.toml, lo que reduce el tamaño del binario. Los panics son para bugs, no para errores esperados.</p>`,
+  chapter: "9. Error Handling",
+  title: "9.1 Unrecoverable Errors with panic!",
+  explanation: `<p>Rust has two categories of errors: unrecoverable (<code>panic!</code>) and recoverable (<code>Result</code>). A <code>panic!</code> stops execution, prints an error message, and unwinds the stack.</p>
+<p>Panics happen explicitly with the <code>panic!()</code> macro or implicitly when you access an out-of-bounds index, for example. The <code>RUST_BACKTRACE=1</code> environment variable shows the full backtrace.</p>
+<p>In production, panics can be configured to abort (terminate without cleanup) in Cargo.toml, which reduces binary size. Panics are for bugs, not for expected errors.</p>`,
   code: `fn main() {
-    println!("=== Manejo de Errores: panic! ===");
+    println!("=== Error Handling: panic! ===");
 
-    // Ejemplo controlado de situaciones que causan panic
+    // Controlled example of situations that cause panic
     let v = vec![1, 2, 3];
 
-    // Esto causaría panic: v[99]
-    // En su lugar, usamos get() que es seguro
+    // This would cause panic: v[99]
+    // Instead, we use get() which is safe
     match v.get(99) {
-        Some(val) => println!("Valor: {}", val),
-        None => println!("Índice 99 no existe (evitamos panic)"),
+        Some(val) => println!("Value: {}", val),
+        None => println!("Index 99 doesn't exist (we avoided panic)"),
     }
 
-    // Funciones que pueden fallar
-    let resultado = dividir_seguro(10.0, 3.0);
-    println!("10 / 3 = {:.2}", resultado);
+    // Functions that can fail
+    let result = safe_divide(10.0, 3.0);
+    println!("10 / 3 = {:.2}", result);
 
-    // let _boom = dividir_seguro(10.0, 0.0); // ¡Esto haría panic!
+    // let _boom = safe_divide(10.0, 0.0); // This would panic!
 
-    // unwrap() y expect() causan panic si es None/Err
-    let numeros = vec![1, 2, 3];
-    // let _val = numeros.get(10).unwrap(); // ¡Panic!
-    // let _val = numeros.get(10).expect("Índice fuera de rango"); // Panic con mensaje
+    // unwrap() and expect() cause panic if None/Err
+    let numbers = vec![1, 2, 3];
+    // let _val = numbers.get(10).unwrap(); // Panic!
+    // let _val = numbers.get(10).expect("Index out of bounds"); // Panic with message
 
-    // Forma segura
-    let val = numeros.get(1).unwrap_or(&0);
-    println!("Valor seguro: {}", val);
+    // Safe way
+    let val = numbers.get(1).unwrap_or(&0);
+    println!("Safe value: {}", val);
 
-    // Demostrar cuándo usar panic
-    println!("\\n¿Cuándo usar panic!?");
-    let casos = [
-        ("Bugs en el código", "Sí - el programa está mal"),
-        ("Entrada de usuario inválida", "No - usa Result"),
-        ("Archivo no encontrado", "No - usa Result"),
-        ("Estado imposible", "Sí - algo salió muy mal"),
-        ("Prototipado rápido", "Sí - unwrap() temporal"),
+    // Demonstrate when to use panic
+    println!("\\nWhen to use panic!?");
+    let cases = [
+        ("Bugs in the code", "Yes - the program is wrong"),
+        ("Invalid user input", "No - use Result"),
+        ("File not found", "No - use Result"),
+        ("Impossible state", "Yes - something went very wrong"),
+        ("Quick prototyping", "Yes - temporary unwrap()"),
     ];
 
-    for (caso, usar_panic) in &casos {
-        println!("  {} -> panic: {}", caso, usar_panic);
+    for (case, use_panic) in &cases {
+        println!("  {} -> panic: {}", case, use_panic);
     }
 }
 
-fn dividir_seguro(a: f64, b: f64) -> f64 {
+fn safe_divide(a: f64, b: f64) -> f64 {
     if b == 0.0 {
-        panic!("¡División por cero!");
+        panic!("Division by zero!");
     }
     a / b
 }`,
-  challenge: "Escribe un programa que demuestre 3 situaciones que causarían panic y muestra cómo manejar cada una de forma segura sin panic."
+  challenge: "Write a program that demonstrates 3 situations that would cause panic and show how to handle each one safely without panic."
 },
 {
   id: "9.2",
-  chapter: "9. Manejo de Errores",
-  title: "9.2 Errores Recuperables con Result",
-  explanation: `<p><code>Result&lt;T, E&gt;</code> es un enum con dos variantes: <code>Ok(T)</code> para éxito y <code>Err(E)</code> para error. Es el mecanismo principal de manejo de errores en Rust, usado por operaciones que pueden fallar.</p>
-<p>El operador <code>?</code> es azúcar sintáctico que propaga errores automáticamente: si el Result es Err, retorna el error; si es Ok, extrae el valor. Solo se puede usar en funciones que retornan Result o Option.</p>
-<p>Puedes encadenar operaciones con <code>and_then()</code>, <code>map()</code>, <code>map_err()</code> y otros combinadores. Para errores personalizados, puedes crear tus propios tipos de error.</p>`,
+  chapter: "9. Error Handling",
+  title: "9.2 Recoverable Errors with Result",
+  explanation: `<p><code>Result&lt;T, E&gt;</code> is an enum with two variants: <code>Ok(T)</code> for success and <code>Err(E)</code> for error. It is the main error handling mechanism in Rust, used by operations that can fail.</p>
+<p>The <code>?</code> operator is syntactic sugar that propagates errors automatically: if the Result is Err, it returns the error; if it is Ok, it extracts the value. It can only be used in functions that return Result or Option.</p>
+<p>You can chain operations with <code>and_then()</code>, <code>map()</code>, <code>map_err()</code>, and other combinators. For custom errors, you can create your own error types.</p>`,
   code: `use std::num::ParseIntError;
 use std::fmt;
 
-// Error personalizado
+// Custom error
 #[derive(Debug)]
 enum AppError {
     ParseError(ParseIntError),
-    ValidacionError(String),
+    ValidationError(String),
     NotFound(String),
 }
 
 impl fmt::Display for AppError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            AppError::ParseError(e) => write!(f, "Error de parseo: {}", e),
-            AppError::ValidacionError(msg) => write!(f, "Validación: {}", msg),
-            AppError::NotFound(item) => write!(f, "No encontrado: {}", item),
+            AppError::ParseError(e) => write!(f, "Parse error: {}", e),
+            AppError::ValidationError(msg) => write!(f, "Validation: {}", msg),
+            AppError::NotFound(item) => write!(f, "Not found: {}", item),
         }
     }
 }
@@ -828,72 +828,72 @@ impl From<ParseIntError> for AppError {
     }
 }
 
-fn parsear_edad(input: &str) -> Result<u32, AppError> {
-    let edad: u32 = input.parse()?; // ? convierte ParseIntError a AppError
-    if edad > 150 {
-        Err(AppError::ValidacionError(
-            format!("Edad {} no es realista", edad)
+fn parse_age(input: &str) -> Result<u32, AppError> {
+    let age: u32 = input.parse()?; // ? converts ParseIntError to AppError
+    if age > 150 {
+        Err(AppError::ValidationError(
+            format!("Age {} is not realistic", age)
         ))
     } else {
-        Ok(edad)
+        Ok(age)
     }
 }
 
-fn buscar_usuario(id: u32) -> Result<String, AppError> {
+fn find_user(id: u32) -> Result<String, AppError> {
     match id {
         1 => Ok(String::from("Alice")),
         2 => Ok(String::from("Bob")),
-        _ => Err(AppError::NotFound(format!("Usuario {}", id))),
+        _ => Err(AppError::NotFound(format!("User {}", id))),
     }
 }
 
 fn main() {
-    // Manejar Result con match
-    let entradas = vec!["25", "abc", "200", "30"];
-    for entrada in entradas {
-        match parsear_edad(entrada) {
-            Ok(edad) => println!("'{}' -> edad: {}", entrada, edad),
-            Err(e) => println!("'{}' -> error: {}", entrada, e),
+    // Handle Result with match
+    let inputs = vec!["25", "abc", "200", "30"];
+    for input in inputs {
+        match parse_age(input) {
+            Ok(age) => println!("'{}' -> age: {}", input, age),
+            Err(e) => println!("'{}' -> error: {}", input, e),
         }
     }
 
-    // Encadenar con and_then
-    let resultado = parsear_edad("1")
-        .and_then(|id| buscar_usuario(id));
-    println!("\\nBúsqueda: {:?}", resultado);
+    // Chain with and_then
+    let result = parse_age("1")
+        .and_then(|id| find_user(id));
+    println!("\\nLookup: {:?}", result);
 
-    // unwrap_or_else para valores default
-    let nombre = buscar_usuario(99)
-        .unwrap_or_else(|_| String::from("Anónimo"));
-    println!("Nombre: {}", nombre);
+    // unwrap_or_else for default values
+    let name = find_user(99)
+        .unwrap_or_else(|_| String::from("Anonymous"));
+    println!("Name: {}", name);
 
-    // map para transformar Ok
-    let doble = parsear_edad("21").map(|e| e * 2);
-    println!("Doble de edad: {:?}", doble);
+    // map to transform Ok
+    let double = parse_age("21").map(|a| a * 2);
+    println!("Double age: {:?}", double);
 }`,
-  challenge: "Crea una función que parsee un string de configuración 'clave=valor' y retorne Result<(String, String), ConfigError>. Maneja errores como formato inválido, clave vacía, etc."
+  challenge: "Create a function that parses a configuration string 'key=value' and returns Result<(String, String), ConfigError>. Handle errors like invalid format, empty key, etc."
 },
 {
   id: "9.3",
-  chapter: "9. Manejo de Errores",
-  title: "9.3 ¿panic! o Result?",
-  explanation: `<p>La decisión entre <code>panic!</code> y <code>Result</code> depende del contexto. Usa <code>panic!</code> para errores que indican bugs (estados imposibles, violación de contratos). Usa <code>Result</code> para errores esperados y recuperables.</p>
-<p>En prototipos y tests, <code>unwrap()</code> y <code>expect()</code> son aceptables. En código de producción, siempre maneja los errores explícitamente. La función <code>main</code> puede retornar <code>Result</code>.</p>
-<p>Los <strong>tipos newtype</strong> para validación son un patrón poderoso: creas un tipo que solo puede construirse con valores válidos, moviendo la validación al constructor y garantizando corrección en todo el programa.</p>`,
-  code: `// Tipo con validación en el constructor
+  chapter: "9. Error Handling",
+  title: "9.3 panic! or Result?",
+  explanation: `<p>The decision between <code>panic!</code> and <code>Result</code> depends on context. Use <code>panic!</code> for errors that indicate bugs (impossible states, contract violations). Use <code>Result</code> for expected, recoverable errors.</p>
+<p>In prototypes and tests, <code>unwrap()</code> and <code>expect()</code> are acceptable. In production code, always handle errors explicitly. The <code>main</code> function can return <code>Result</code>.</p>
+<p><strong>Newtype</strong> patterns for validation are powerful: you create a type that can only be constructed with valid values, moving validation to the constructor and guaranteeing correctness throughout the program.</p>`,
+  code: `// Type with validation in the constructor
 #[derive(Debug)]
-struct Porcentaje(f64);
+struct Percentage(f64);
 
-impl Porcentaje {
-    fn new(valor: f64) -> Result<Self, String> {
-        if valor < 0.0 || valor > 100.0 {
-            Err(format!("{} no es un porcentaje válido (0-100)", valor))
+impl Percentage {
+    fn new(value: f64) -> Result<Self, String> {
+        if value < 0.0 || value > 100.0 {
+            Err(format!("{} is not a valid percentage (0-100)", value))
         } else {
-            Ok(Porcentaje(valor))
+            Ok(Percentage(value))
         }
     }
 
-    fn valor(&self) -> f64 {
+    fn value(&self) -> f64 {
         self.0
     }
 }
@@ -906,49 +906,49 @@ impl Email {
         if email.contains('@') && email.contains('.') {
             Ok(Email(String::from(email)))
         } else {
-            Err(format!("'{}' no es un email válido", email))
+            Err(format!("'{}' is not a valid email", email))
         }
     }
 }
 
-// main puede retornar Result
+// main can return Result
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Tipos validados
-    let nota = Porcentaje::new(85.0)?;
-    println!("Nota: {}%", nota.valor());
+    // Validated types
+    let grade = Percentage::new(85.0)?;
+    println!("Grade: {}%", grade.value());
 
-    // Esto fallaría:
-    match Porcentaje::new(150.0) {
-        Ok(p) => println!("Porcentaje: {:?}", p),
+    // This would fail:
+    match Percentage::new(150.0) {
+        Ok(p) => println!("Percentage: {:?}", p),
         Err(e) => println!("Error: {}", e),
     }
 
     let email = Email::new("user@example.com")?;
     println!("Email: {:?}", email);
 
-    match Email::new("invalido") {
+    match Email::new("invalid") {
         Ok(e) => println!("Email: {:?}", e),
         Err(e) => println!("Error: {}", e),
     }
 
-    // Guía de decisión
-    println!("\\n=== ¿panic! o Result? ===");
-    let guia = [
-        ("Ejemplo/prototipo", "unwrap()/expect() OK"),
-        ("Test", "unwrap() - queremos que falle rápido"),
-        ("Librería", "Result siempre - dejar que el usuario decida"),
-        ("Input de usuario", "Result - el usuario puede corregir"),
-        ("Bug del programador", "panic! - no debería pasar"),
-        ("Estado corrupto", "panic! - no se puede continuar"),
+    // Decision guide
+    println!("\\n=== panic! or Result? ===");
+    let guide = [
+        ("Example/prototype", "unwrap()/expect() OK"),
+        ("Test", "unwrap() - we want it to fail fast"),
+        ("Library", "Result always - let the user decide"),
+        ("User input", "Result - the user can correct it"),
+        ("Programmer bug", "panic! - this shouldn't happen"),
+        ("Corrupted state", "panic! - cannot continue"),
     ];
 
-    for (caso, recomendacion) in &guia {
-        println!("  {}: {}", caso, recomendacion);
+    for (case, recommendation) in &guide {
+        println!("  {}: {}", case, recommendation);
     }
 
     Ok(())
 }`,
-  challenge: "Crea un tipo Username que solo acepte strings de 3-20 caracteres alfanuméricos. Crea un tipo Password que requiera al menos 8 caracteres con al menos un número. Usa Result para la validación."
+  challenge: "Create a Username type that only accepts 3-20 alphanumeric character strings. Create a Password type that requires at least 8 characters with at least one number. Use Result for validation."
 },
 
 // ══════════════════════════════════════════════════════
@@ -956,259 +956,259 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 // ══════════════════════════════════════════════════════
 {
   id: "10.1",
-  chapter: "10. Genéricos, Traits y Lifetimes",
-  title: "10.1 Tipos Genéricos",
-  explanation: `<p>Los <strong>genéricos</strong> permiten escribir código que funciona con múltiples tipos. Se declaran con <code>&lt;T&gt;</code> en funciones, structs y enums. En tiempo de compilación, Rust genera código específico para cada tipo usado (monomorfización).</p>
-<p>Puedes tener múltiples parámetros genéricos: <code>&lt;T, U&gt;</code>. Los genéricos no tienen costo en rendimiento gracias a la monomorfización: el compilador genera versiones especializadas.</p>
-<p>Los genéricos son la base del sistema de tipos de Rust. Vec&lt;T&gt;, Option&lt;T&gt;, Result&lt;T, E&gt; son todos tipos genéricos que ya has usado.</p>`,
-  code: `// Función genérica
-fn mayor<T: PartialOrd>(lista: &[T]) -> &T {
-    let mut mayor = &lista[0];
-    for item in &lista[1..] {
-        if item > mayor {
-            mayor = item;
+  chapter: "10. Generics, Traits & Lifetimes",
+  title: "10.1 Generic Types",
+  explanation: `<p><strong>Generics</strong> let you write code that works with multiple types. They are declared with <code>&lt;T&gt;</code> in functions, structs, and enums. At compile time, Rust generates specific code for each type used (monomorphization).</p>
+<p>You can have multiple generic parameters: <code>&lt;T, U&gt;</code>. Generics have no runtime performance cost thanks to monomorphization: the compiler generates specialized versions.</p>
+<p>Generics are the foundation of Rust's type system. Vec&lt;T&gt;, Option&lt;T&gt;, Result&lt;T, E&gt; are all generic types you have already used.</p>`,
+  code: `// Generic function
+fn largest<T: PartialOrd>(list: &[T]) -> &T {
+    let mut largest = &list[0];
+    for item in &list[1..] {
+        if item > largest {
+            largest = item;
         }
     }
-    mayor
+    largest
 }
 
-// Struct genérico
+// Generic struct
 #[derive(Debug)]
-struct Punto<T> {
+struct Point<T> {
     x: T,
     y: T,
 }
 
-// Struct con múltiples tipos genéricos
+// Struct with multiple generic types
 #[derive(Debug)]
-struct Par<T, U> {
-    primero: T,
-    segundo: U,
+struct Pair<T, U> {
+    first: T,
+    second: U,
 }
 
-// Implementación genérica
-impl<T: std::fmt::Display> Punto<T> {
-    fn mostrar(&self) {
+// Generic implementation
+impl<T: std::fmt::Display> Point<T> {
+    fn display(&self) {
         println!("({}, {})", self.x, self.y);
     }
 }
 
-// Implementación solo para un tipo específico
-impl Punto<f64> {
-    fn distancia_origen(&self) -> f64 {
+// Implementation only for a specific type
+impl Point<f64> {
+    fn distance_from_origin(&self) -> f64 {
         (self.x.powi(2) + self.y.powi(2)).sqrt()
     }
 }
 
-// Método con tipos genéricos mixtos
-impl<T, U> Par<T, U> {
-    fn mezclar<V, W>(self, otro: Par<V, W>) -> Par<T, W> {
-        Par {
-            primero: self.primero,
-            segundo: otro.segundo,
+// Method with mixed generic types
+impl<T, U> Pair<T, U> {
+    fn mixup<V, W>(self, other: Pair<V, W>) -> Pair<T, W> {
+        Pair {
+            first: self.first,
+            second: other.second,
         }
     }
 }
 
 fn main() {
-    // Función genérica con diferentes tipos
-    let numeros = vec![34, 50, 25, 100, 65];
-    println!("Mayor número: {}", mayor(&numeros));
+    // Generic function with different types
+    let numbers = vec![34, 50, 25, 100, 65];
+    println!("Largest number: {}", largest(&numbers));
 
     let chars = vec!['y', 'm', 'a', 'q'];
-    println!("Mayor char: {}", mayor(&chars));
+    println!("Largest char: {}", largest(&chars));
 
-    // Structs genéricos
-    let entero = Punto { x: 5, y: 10 };
-    let flotante = Punto { x: 1.5, y: 4.2 };
-    println!("Puntos: {:?} y {:?}", entero, flotante);
+    // Generic structs
+    let integer = Point { x: 5, y: 10 };
+    let float = Point { x: 1.5, y: 4.2 };
+    println!("Points: {:?} and {:?}", integer, float);
 
-    flotante.mostrar();
-    println!("Distancia al origen: {:.2}", flotante.distancia_origen());
+    float.display();
+    println!("Distance from origin: {:.2}", float.distance_from_origin());
 
-    // Par con tipos mixtos
-    let p1 = Par { primero: 5, segundo: "hola" };
-    let p2 = Par { primero: 'x', segundo: 3.14 };
-    let p3 = p1.mezclar(p2);
-    println!("Mezclado: {:?}", p3); // Par { primero: 5, segundo: 3.14 }
+    // Pair with mixed types
+    let p1 = Pair { first: 5, second: "hello" };
+    let p2 = Pair { first: 'x', second: 3.14 };
+    let p3 = p1.mixup(p2);
+    println!("Mixed: {:?}", p3); // Pair { first: 5, second: 3.14 }
 }`,
-  challenge: "Crea un struct genérico Pila<T> con métodos push, pop (retorna Option<T>), peek (retorna Option<&T>), y is_empty. Úsalo con diferentes tipos."
+  challenge: "Create a generic Stack<T> struct with push, pop (returns Option<T>), peek (returns Option<&T>), and is_empty methods. Use it with different types."
 },
 {
   id: "10.2",
-  chapter: "10. Genéricos, Traits y Lifetimes",
-  title: "10.2 Traits: Definir Comportamiento Compartido",
-  explanation: `<p>Los <strong>traits</strong> definen comportamiento compartido, similar a interfaces en otros lenguajes. Se declaran con <code>trait</code> y pueden tener métodos con o sin implementación default.</p>
-<p>Implementas un trait para un tipo con <code>impl Trait for Type</code>. Los <strong>trait bounds</strong> (<code>T: Trait</code>) restringen genéricos a tipos que implementan cierto trait. La sintaxis <code>impl Trait</code> es azúcar para trait bounds simples.</p>
-<p>Puedes combinar traits con <code>+</code>: <code>T: Display + Clone</code>. Las cláusulas <code>where</code> hacen la sintaxis más legible con múltiples bounds. Los traits pueden tener tipos asociados y constantes.</p>`,
+  chapter: "10. Generics, Traits & Lifetimes",
+  title: "10.2 Traits: Defining Shared Behavior",
+  explanation: `<p><strong>Traits</strong> define shared behavior, similar to interfaces in other languages. They are declared with <code>trait</code> and can have methods with or without default implementations.</p>
+<p>You implement a trait for a type with <code>impl Trait for Type</code>. <strong>Trait bounds</strong> (<code>T: Trait</code>) restrict generics to types that implement a certain trait. The <code>impl Trait</code> syntax is sugar for simple trait bounds.</p>
+<p>You can combine traits with <code>+</code>: <code>T: Display + Clone</code>. <code>where</code> clauses make the syntax more readable with multiple bounds. Traits can have associated types and constants.</p>`,
   code: `use std::fmt;
 
-// Definir un trait
-trait Resumen {
-    fn resumir_autor(&self) -> String;
+// Define a trait
+trait Summary {
+    fn summarize_author(&self) -> String;
 
-    // Método con implementación default
-    fn resumir(&self) -> String {
-        format!("(Leer más de {}...)", self.resumir_autor())
+    // Method with default implementation
+    fn summarize(&self) -> String {
+        format!("(Read more from {}...)", self.summarize_author())
     }
 }
 
 #[derive(Debug)]
-struct Articulo {
-    titulo: String,
-    autor: String,
-    contenido: String,
+struct Article {
+    title: String,
+    author: String,
+    content: String,
 }
 
 #[derive(Debug)]
 struct Tweet {
-    usuario: String,
-    contenido: String,
-    respuesta: bool,
+    username: String,
+    content: String,
+    reply: bool,
 }
 
-impl Resumen for Articulo {
-    fn resumir_autor(&self) -> String {
-        self.autor.clone()
+impl Summary for Article {
+    fn summarize_author(&self) -> String {
+        self.author.clone()
     }
 
-    fn resumir(&self) -> String {
-        format!("{}, por {} - {}...", self.titulo, self.autor, &self.contenido[..20.min(self.contenido.len())])
+    fn summarize(&self) -> String {
+        format!("{}, by {} - {}...", self.title, self.author, &self.content[..20.min(self.content.len())])
     }
 }
 
-impl Resumen for Tweet {
-    fn resumir_autor(&self) -> String {
-        format!("@{}", self.usuario)
+impl Summary for Tweet {
+    fn summarize_author(&self) -> String {
+        format!("@{}", self.username)
     }
-    // Usa el default de resumir()
+    // Uses the default summarize()
 }
 
-// Trait bound como parámetro
-fn notificar(item: &impl Resumen) {
-    println!("¡Nuevo! {}", item.resumir());
+// Trait bound as parameter
+fn notify(item: &impl Summary) {
+    println!("New! {}", item.summarize());
 }
 
-// Sintaxis completa con where
-fn comparar_resumen<T, U>(a: &T, b: &U) -> String
+// Full syntax with where
+fn compare_summaries<T, U>(a: &T, b: &U) -> String
 where
-    T: Resumen + fmt::Debug,
-    U: Resumen + fmt::Debug,
+    T: Summary + fmt::Debug,
+    U: Summary + fmt::Debug,
 {
-    format!("{} vs {}", a.resumir(), b.resumir())
+    format!("{} vs {}", a.summarize(), b.summarize())
 }
 
-// Retornar impl Trait
-fn crear_tweet() -> impl Resumen {
+// Return impl Trait
+fn create_tweet() -> impl Summary {
     Tweet {
-        usuario: String::from("rustlang"),
-        contenido: String::from("Rust 2024 ya está aquí"),
-        respuesta: false,
+        username: String::from("rustlang"),
+        content: String::from("Rust 2024 is here"),
+        reply: false,
     }
 }
 
 fn main() {
-    let articulo = Articulo {
-        titulo: String::from("Rust en Producción"),
-        autor: String::from("Alice"),
-        contenido: String::from("Rust se usa cada vez más en sistemas de producción..."),
+    let article = Article {
+        title: String::from("Rust in Production"),
+        author: String::from("Alice"),
+        content: String::from("Rust is increasingly used in production systems..."),
     };
 
     let tweet = Tweet {
-        usuario: String::from("bob"),
-        contenido: String::from("Aprendiendo Rust!"),
-        respuesta: false,
+        username: String::from("bob"),
+        content: String::from("Learning Rust!"),
+        reply: false,
     };
 
-    notificar(&articulo);
-    notificar(&tweet);
+    notify(&article);
+    notify(&tweet);
 
-    println!("{}", comparar_resumen(&articulo, &tweet));
+    println!("{}", compare_summaries(&article, &tweet));
 
-    let nuevo = crear_tweet();
-    println!("Nuevo: {}", nuevo.resumir());
+    let new_tweet = create_tweet();
+    println!("New: {}", new_tweet.summarize());
 }`,
-  challenge: "Crea un trait Area con un método area() -> f64 e impleméntalo para Circulo, Rectangulo y Triangulo. Escribe una función que reciba un slice de &dyn Area y retorne el área total."
+  challenge: "Create an Area trait with an area() -> f64 method and implement it for Circle, Rectangle, and Triangle. Write a function that receives a slice of &dyn Area and returns the total area."
 },
 {
   id: "10.3",
-  chapter: "10. Genéricos, Traits y Lifetimes",
-  title: "10.3 Validando Referencias con Lifetimes",
-  explanation: `<p>Los <strong>lifetimes</strong> son anotaciones que le dicen al compilador cuánto tiempo viven las referencias. Su propósito es prevenir <em>dangling references</em> (referencias a datos liberados).</p>
-<p>La sintaxis usa apóstrofo: <code>'a</code>. Cuando una función retorna una referencia, el lifetime indica que el resultado vive al menos tanto como las entradas anotadas. El compilador infiere lifetimes en muchos casos (reglas de elision).</p>
-<p>El lifetime <code>'static</code> indica que la referencia vive toda la duración del programa. Los string literals tienen lifetime <code>'static</code>. Los structs que contienen referencias necesitan anotaciones de lifetime.</p>`,
-  code: `// Función con lifetimes: el resultado vive tanto como la entrada más corta
-fn mas_largo<'a>(x: &'a str, y: &'a str) -> &'a str {
+  chapter: "10. Generics, Traits & Lifetimes",
+  title: "10.3 Validating References with Lifetimes",
+  explanation: `<p><strong>Lifetimes</strong> are annotations that tell the compiler how long references live. Their purpose is to prevent <em>dangling references</em> (references to freed data).</p>
+<p>The syntax uses an apostrophe: <code>'a</code>. When a function returns a reference, the lifetime indicates the result lives at least as long as the annotated inputs. The compiler infers lifetimes in many cases (elision rules).</p>
+<p>The <code>'static</code> lifetime indicates the reference lives for the entire duration of the program. String literals have a <code>'static</code> lifetime. Structs that contain references need lifetime annotations.</p>`,
+  code: `// Function with lifetimes: the result lives as long as the shorter input
+fn longest<'a>(x: &'a str, y: &'a str) -> &'a str {
     if x.len() > y.len() { x } else { y }
 }
 
-// Struct con referencia necesita lifetime
+// Struct with reference needs lifetime
 #[derive(Debug)]
-struct Extracto<'a> {
-    texto: &'a str,
-    autor: &'a str,
+struct Excerpt<'a> {
+    text: &'a str,
+    author: &'a str,
 }
 
-impl<'a> Extracto<'a> {
-    // El lifetime de &self se infiere (regla de elisión)
-    fn nivel(&self) -> &str {
-        if self.texto.len() > 50 { "largo" } else { "corto" }
+impl<'a> Excerpt<'a> {
+    // The lifetime of &self is inferred (elision rule)
+    fn level(&self) -> &str {
+        if self.text.len() > 50 { "long" } else { "short" }
     }
 
-    // Retorna referencia con lifetime de self
-    fn primera_palabra(&self) -> &str {
-        self.texto.split_whitespace().next().unwrap_or("")
+    // Returns reference with self's lifetime
+    fn first_word(&self) -> &str {
+        self.text.split_whitespace().next().unwrap_or("")
     }
 }
 
-// Múltiples lifetimes
-fn primero_de<'a, 'b>(x: &'a str, _y: &'b str) -> &'a str {
+// Multiple lifetimes
+fn first_of<'a, 'b>(x: &'a str, _y: &'b str) -> &'a str {
     x
 }
 
-// Combinando genéricos, traits y lifetimes
-fn anuncio_largo<'a, T>(x: &'a str, y: &'a str, anuncio: T) -> &'a str
+// Combining generics, traits, and lifetimes
+fn long_announcement<'a, T>(x: &'a str, y: &'a str, ann: T) -> &'a str
 where
     T: std::fmt::Display,
 {
-    println!("Anuncio: {}", anuncio);
+    println!("Announcement: {}", ann);
     if x.len() > y.len() { x } else { y }
 }
 
 fn main() {
-    // Lifetimes básicos
-    let string1 = String::from("cadena larga es larga");
-    let resultado;
+    // Basic lifetimes
+    let string1 = String::from("long string is long");
+    let result;
     {
         let string2 = String::from("xyz");
-        resultado = mas_largo(string1.as_str(), string2.as_str());
-        println!("Más largo: {}", resultado);
+        result = longest(string1.as_str(), string2.as_str());
+        println!("Longest: {}", result);
     }
-    // println!("{}", resultado); // Error si string2 ya no existe
+    // println!("{}", result); // Error if string2 no longer exists
 
-    // Struct con lifetime
-    let novela = String::from("Llámame Ishmael. Hace algunos años...");
-    let extracto = Extracto {
-        texto: &novela[..30],
-        autor: "Herman Melville",
+    // Struct with lifetime
+    let novel = String::from("Call me Ishmael. Some years ago...");
+    let excerpt = Excerpt {
+        text: &novel[..30],
+        author: "Herman Melville",
     };
-    println!("Extracto: {:?}", extracto);
-    println!("Nivel: {}", extracto.nivel());
-    println!("Primera palabra: {}", extracto.primera_palabra());
+    println!("Excerpt: {:?}", excerpt);
+    println!("Level: {}", excerpt.level());
+    println!("First word: {}", excerpt.first_word());
 
     // 'static lifetime
-    let s: &'static str = "Vivo para siempre";
+    let s: &'static str = "I live forever";
     println!("{}", s);
 
-    // Combinando todo
-    let mejor = anuncio_largo(
-        "primer texto largo",
-        "segundo",
-        "¡Oferta especial!",
+    // Combining everything
+    let best = long_announcement(
+        "first long text",
+        "second",
+        "Special offer!",
     );
-    println!("Mejor: {}", mejor);
+    println!("Best: {}", best);
 }`,
-  challenge: "Crea un struct Cache<'a> que almacene referencias a strings. Implementa métodos para agregar entradas y buscar por clave. Asegúrate de que los lifetimes sean correctos."
+  challenge: "Create a Cache<'a> struct that stores references to strings. Implement methods to add entries and search by key. Make sure the lifetimes are correct."
 }
 
 ];

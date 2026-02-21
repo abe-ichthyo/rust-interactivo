@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rust Interactivo</title>
+<title>Rust Interactive</title>
 <style>
 :root {
   --bg-dark: #1a1025;
@@ -300,8 +300,8 @@ body {
 
 <nav id="sidebar">
   <div id="sidebar-header">
-    <h1>🦀 Rust Interactivo</h1>
-    <p>Aprende Rust — Los 20 capítulos del Rust Book</p>
+    <h1>🦀 Rust Interactive</h1>
+    <p>Learn Rust — All 20 chapters of the Rust Book</p>
   </div>
   <div id="chapter-list"></div>
 </nav>
@@ -309,7 +309,7 @@ body {
 <div id="main">
   <div id="topbar">
     <button id="menu-btn" onclick="toggleSidebar()">☰</button>
-    <h2>🦀 Rust Interactivo</h2>
+    <h2>🦀 Rust Interactive</h2>
   </div>
 
   <div id="content">
@@ -320,26 +320,26 @@ body {
     <div id="editor-section">
       <div id="editor-toolbar">
         <span>main.rs</span>
-        <button id="run-btn" onclick="runCode()">▶ Ejecutar</button>
+        <button id="run-btn" onclick="runCode()">▶ Run</button>
       </div>
       <div id="editor-container"></div>
       <div id="output-section">
         <div id="output-header">
           <div id="output-status"></div>
-          <span>Salida</span>
+          <span>Output</span>
         </div>
-        <div id="output">Haz clic en "Ejecutar" para compilar y ejecutar tu código.</div>
+        <div id="output">Click "Run" to compile and execute your code.</div>
       </div>
     </div>
 
     <div id="challenge-section">
-      <h3>🏋️ Desafío</h3>
+      <h3>🏋️ Challenge</h3>
       <div id="challenge-text"></div>
     </div>
 
     <div id="nav-buttons">
-      <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">← Anterior</button>
-      <button class="nav-btn" id="next-btn" onclick="navigate(1)">Siguiente →</button>
+      <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">← Previous</button>
+      <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next →</button>
     </div>
   </div>
 </div>
@@ -361,7 +361,7 @@ function buildSidebar() {
   lessons.forEach((lesson, i) => {
     const div = document.createElement('div');
     div.className = 'chapter-item' + (i === currentIndex ? ' active' : '');
-    div.innerHTML = `<span class="ch-num">Cap ${lesson.chapter}</span>${lesson.title}`;
+    div.innerHTML = `<span class="ch-num">Ch ${lesson.chapter}</span>${lesson.title}`;
     div.onclick = () => loadLesson(i);
     list.appendChild(div);
   });
@@ -374,7 +374,7 @@ function loadLesson(index) {
   document.getElementById('lesson-subtitle').textContent = lesson.subtitle || '';
   document.getElementById('lesson-explanation').innerHTML = lesson.explanation;
   document.getElementById('challenge-text').innerHTML = lesson.challenge || '';
-  document.getElementById('output').textContent = 'Haz clic en "Ejecutar" para compilar y ejecutar tu código.';
+  document.getElementById('output').textContent = 'Click "Run" to compile and execute your code.';
   document.getElementById('output-status').className = '';
 
   if (editor) {
@@ -409,8 +409,8 @@ async function runCode() {
   const status = document.getElementById('output-status');
 
   btn.disabled = true;
-  btn.innerHTML = '⏳ Compilando...';
-  output.textContent = 'Compilando y ejecutando...';
+  btn.innerHTML = '⏳ Compiling...';
+  output.textContent = 'Compiling and running...';
   status.className = 'running';
 
   try {
@@ -429,19 +429,19 @@ async function runCode() {
     });
     const data = await resp.json();
     if (data.success) {
-      output.textContent = data.stdout || '(sin salida)';
+      output.textContent = data.stdout || '(no output)';
       status.className = 'success';
     } else {
-      output.textContent = data.stderr || 'Error de compilación';
+      output.textContent = data.stderr || 'Compilation error';
       status.className = 'error';
     }
   } catch (e) {
-    output.textContent = 'Error de conexión: ' + e.message;
+    output.textContent = 'Connection error: ' + e.message;
     status.className = 'error';
   }
 
   btn.disabled = false;
-  btn.innerHTML = '▶ Ejecutar';
+  btn.innerHTML = '▶ Run';
 }
 
 // Initialize Monaco Editor
